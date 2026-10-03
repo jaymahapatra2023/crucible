@@ -1,0 +1,14 @@
+label,repo_url,band,edge_case,build_method,build_command
+Angular RealWorld,https://github.com/realworld-apps/angular-realworld-example-app,STRONG,,COMMAND,npm ci && npm run build
+ASP.NET Core RealWorld,https://github.com/realworld-apps/aspnetcore-realworld-example-app,STRONG,,COMMAND,dotnet build
+Go Gin RealWorld,https://github.com/gothinkster/golang-gin-realworld-example-app,STRONG,,COMMAND,go build ./...
+Node Express RealWorld,https://github.com/gothinkster/node-express-realworld-example-app,MIDDLING,,COMMAND,npm ci && npm run build
+Spring Boot RealWorld,https://github.com/gothinkster/spring-boot-realworld-example-app,MIDDLING,,COMMAND,./gradlew build -x test
+NestJS RealWorld,https://github.com/lujakob/nestjs-realworld-example-app,MIDDLING,,COMMAND,npm ci && npm run build
+Vue RealWorld,https://github.com/realworld-apps/vue-realworld-example-app,MIDDLING,,COMMAND,npm ci && npm run build
+Django RealWorld,https://github.com/gothinkster/django-realworld-example-app,WEAK,,COMMAND,pip install -r requirements.txt
+Laravel RealWorld,https://github.com/gothinkster/laravel-realworld-example-app,WEAK,,COMMAND,composer install --no-interaction
+React MobX RealWorld,https://github.com/gothinkster/react-mobx-realworld-example-app,MIDDLING,VERY_LARGE,COMMAND,npm ci && npm run build
+Flask RealWorld,https://github.com/gothinkster/flask-realworld-example-app,WEAK,FAILS_TO_BUILD,COMMAND,pip install -r requirements/prod.txt
+RealWorld starter kit,https://github.com/gothinkster/realworld-starter-kit,WEAK,SCAFFOLD_ONLY,COMMAND,npm ci
+TodoMVC,https://github.com/tastejs/todomvc,WEAK,WRONG_PROBLEM,COMMAND,npm ci

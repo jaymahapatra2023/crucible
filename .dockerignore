@@ -1,0 +1,22 @@
+# Build context for the Dockerfile (see docs/DEPLOYMENT_AWS.md). Everything the image needs is
+# rebuilt inside it from source; nothing built or secret on this machine goes in.
+node_modules
+**/node_modules
+**/dist
+**/*.tsbuildinfo
+coverage
+test-results
+playwright-report
+.env
+.env.*
+!.env.example
+.git
+.github
+docs
+e2e
+scripts
+*.md
+!README.md
+.DS_Store
+deploy/aws/cdk/node_modules
+deploy/aws/cdk/cdk.out

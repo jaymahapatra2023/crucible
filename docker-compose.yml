@@ -1,0 +1,79 @@
+# Crucible on one host (docs/DEPLOYMENT_AWS.md).
+#
+# Three services, one origin. `migrate` runs to completion before `api` starts, so the API's
+# boot-time schema check cannot fail on a fresh database. `web` is Caddy: TLS, the static app,
+# and the reverse proxy to the API — the browser sees one hostname.
+#
+# The database is NOT here in production: it is RDS (see deploy/aws). For a local trial, add
+# `-f docker-compose.local.yml`, which supplies Postgres and plain HTTP.
+#
+# Exactly ONE api replica, by design: rate ceilings and the scheduler live in process, and the
+# pre-flight queue is claimed with SKIP LOCKED — correct with several, but the ceilings are not.
+
+x-api-env: &api-env
+  env_file: .env
+  environment:
+    NODE_ENV: production
+    HOST: 0.0.0.0
+    PORT: "3101"
+    WORKSPACE_ROOT: /var/lib/crucible
+    TMPDIR: /var/tmp/crucible
+    LOG_LEVEL: ${LOG_LEVEL:-info}
+
+x-logging: &logging
+  logging:
+    driver: json-file
+    options: { max-size: "50m", max-file: "10" }
+
+services:
+  migrate:
+    image: ${CRUCIBLE_IMAGE_API:-crucible-api:local}
+    build: { context: ., target: api }
+    <<: [*api-env, *logging]
+    command: ["node", "apps/api/dist/db/cli/migrate.js"]
+    restart: "no"
+
+  api:
+    image: ${CRUCIBLE_IMAGE_API:-crucible-api:local}
+    build: { context: ., target: api }
+    <<: [*api-env, *logging]
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    restart: unless-stopped
+    stop_grace_period: 30s
+    volumes:
+      # The prober builds and runs submission containers on the HOST daemon (ADR: no daemon in
+      # the image). The socket is the one privilege this container holds; see the deployment
+      # notes for what that means and why the instance is single-tenant.
+      - /var/run/docker.sock:/var/run/docker.sock
+      # Brief artifacts and anything the API must keep across restarts.
+      - crucible-data:/var/lib/crucible
+      # Clones and scan workspaces: large, disposable, but must not fill the root filesystem.
+      - crucible-tmp:/var/tmp/crucible
+    expose: ["3101"]
+
+  web:
+    image: ${CRUCIBLE_IMAGE_WEB:-crucible-web:local}
+    build: { context: ., target: web }
+    <<: *logging
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped
+    environment:
+      # The public hostname. Caddy obtains and renews the certificate for it.
+      SITE_ADDRESS: ${SITE_ADDRESS:?set SITE_ADDRESS to the public hostname, e.g. crucible.example.org}
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - caddy-data:/data
+      - caddy-config:/config
+
+volumes:
+  crucible-data:
+  crucible-tmp:
+  caddy-data:
+  caddy-config:

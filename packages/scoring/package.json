@@ -1,0 +1,28 @@
+{
+  "name": "@crucible/scoring",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Criterion scoring maths, cohort normalisation, composite and ranking (E06/E07).",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -b",
+    "clean": "rm -rf dist tsconfig.tsbuildinfo",
+    "typecheck": "tsc -b --pretty",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@crucible/rubric": "workspace:*",
+    "@crucible/scanner": "workspace:*"
+  }
+}

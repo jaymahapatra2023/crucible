@@ -1,0 +1,12 @@
+label,repo_url,band,edge_case,build_method,build_command
+Go Gin Conduit,https://github.com/gothinkster/golang-gin-realworld-example-app,STRONG,,COMMAND,go build ./...
+ASP.NET Core Conduit,https://github.com/realworld-apps/aspnetcore-realworld-example-app,STRONG,,COMMAND,dotnet build
+Spring Boot Conduit,https://github.com/gothinkster/spring-boot-realworld-example-app,STRONG,,COMMAND,./gradlew build -x test
+NestJS Conduit,https://github.com/lujakob/nestjs-realworld-example-app,MIDDLING,,COMMAND,npm ci && npm run build
+Node Express Conduit,https://github.com/gothinkster/node-express-realworld-example-app,MIDDLING,,COMMAND,npm ci && npm run build
+MikroORM NestJS Conduit,https://github.com/mikro-orm/nestjs-realworld-example-app,MIDDLING,VERY_LARGE,COMMAND,npm ci && npm run build
+Django Conduit,https://github.com/gothinkster/django-realworld-example-app,MIDDLING,,COMMAND,pip install -r requirements.txt
+Laravel Conduit,https://github.com/gothinkster/laravel-realworld-example-app,WEAK,,COMMAND,composer install --no-interaction
+Flask Conduit,https://github.com/gothinkster/flask-realworld-example-app,WEAK,FAILS_TO_BUILD,COMMAND,pip install -r requirements/prod.txt
+Spring PetClinic,https://github.com/spring-projects/spring-petclinic,WEAK,WRONG_PROBLEM,COMMAND,./mvnw package -DskipTests
+Conduit starter kit,https://github.com/gothinkster/realworld-starter-kit,WEAK,SCAFFOLD_ONLY,COMMAND,npm ci

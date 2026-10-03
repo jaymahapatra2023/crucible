@@ -1,0 +1,54 @@
+# Crucible edge (docs/DEPLOYMENT_AWS.md).
+#
+# One origin for the web app, the API and the websocket, because the API refuses cross-origin
+# requests in production (CORS is off) and the browser must never need to know a second host.
+# SITE_ADDRESS is the public hostname: with a real name Caddy obtains and renews a Let's Encrypt
+# certificate itself (no contact address is registered — none is required); with ":80" (local
+# trial) it serves plain HTTP.
+
+{
+	admin off
+}
+
+{$SITE_ADDRESS::80} {
+	encode zstd gzip
+
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options nosniff
+		X-Frame-Options DENY
+		Referrer-Policy strict-origin-when-cross-origin
+		# The app is self-contained: no third-party scripts, styles or fonts. Inline styles are
+		# React style props; inline scripts are not used. Websocket to self only.
+		Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' wss: ws:; font-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'"
+		Permissions-Policy "camera=(), microphone=(), geolocation=()"
+		-Server
+	}
+
+	# The API and its liveness probes. Uploads of briefs are capped at 64 MB by the API itself.
+	handle /api/* {
+		reverse_proxy api:3101
+	}
+	handle /health {
+		reverse_proxy api:3101
+	}
+	handle /ready {
+		reverse_proxy api:3101
+	}
+	# Progress websocket. Caddy upgrades the connection automatically.
+	handle /ws/* {
+		reverse_proxy api:3101
+	}
+
+	# The single-page app: any other path is a client route.
+	handle {
+		root * /srv
+		try_files {path} /index.html
+		file_server
+	}
+
+	log {
+		output stdout
+		format json
+	}
+}

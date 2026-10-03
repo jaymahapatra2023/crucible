@@ -1,0 +1,11 @@
+{
+  "files": [],
+  "references": [
+    { "path": "./packages/contracts" },
+    { "path": "./packages/rubric" },
+    { "path": "./packages/scanner" },
+    { "path": "./packages/scoring" },
+    { "path": "./packages/prober" },
+    { "path": "./apps/api" }
+  ]
+}

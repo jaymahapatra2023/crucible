@@ -1,0 +1,36 @@
+# Local trial of the production images: `docker compose -f docker-compose.yml -f docker-compose.local.yml up`.
+# Adds a throwaway Postgres and serves plain HTTP on :8080. Never for real data.
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: crucible
+      POSTGRES_USER: crucible
+      POSTGRES_PASSWORD: crucible-local-only
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U crucible -d crucible"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    volumes:
+      - pg-local:/var/lib/postgresql/data
+
+  migrate:
+    environment:
+      DATABASE_URL: postgresql://crucible:crucible-local-only@postgres:5432/crucible
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  api:
+    environment:
+      DATABASE_URL: postgresql://crucible:crucible-local-only@postgres:5432/crucible
+
+  web:
+    environment:
+      SITE_ADDRESS: ":80"
+    ports:
+      - "8080:80"
+
+volumes:
+  pg-local:

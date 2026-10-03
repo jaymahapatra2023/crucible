@@ -1,0 +1,1659 @@
+<title>The Crucible Record</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Serif:ital,wght@0,400;0,600;1,400&display=swap">
+
+<style>
+:root {
+  --ground:  #fbfbfa;
+  --surface: #ffffff;
+  --sunk:    #f4f2ee;
+  --rule:    #e4e2dd;
+  --rule-hi: #d3cfc6;
+  --ink:     #1b1a17;
+  --muted:   #6b6862;
+  --accent:  #8a4b2a;
+  --accent-wash: #f6ece5;
+  --ok:      #2f6a3f;
+  --ok-wash: #ecf3ed;
+  --warn:    #8a6a1f;
+  --warn-wash: #f8f2e0;
+  --danger:  #9c3025;
+  --danger-wash: #faecea;
+
+  --serif: "IBM Plex Serif", Georgia, "Times New Roman", serif;
+  --sans:  "IBM Plex Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono:  "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+
+  --measure: 68ch;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ground:  #161512;
+    --surface: #1f1d19;
+    --sunk:    #1a1815;
+    --rule:    #34312a;
+    --rule-hi: #4a4539;
+    --ink:     #ece8e0;
+    --muted:   #9c968a;
+    --accent:  #cf8d61;
+    --accent-wash: #2a211a;
+    --ok:      #7aad86;
+    --ok-wash: #1c241d;
+    --warn:    #cfae5e;
+    --warn-wash: #262115;
+    --danger:  #d97a6c;
+    --danger-wash: #2a1c19;
+  }
+}
+
+:root[data-theme="dark"] {
+  --ground:  #161512;
+  --surface: #1f1d19;
+  --sunk:    #1a1815;
+  --rule:    #34312a;
+  --rule-hi: #4a4539;
+  --ink:     #ece8e0;
+  --muted:   #9c968a;
+  --accent:  #cf8d61;
+  --accent-wash: #2a211a;
+  --ok:      #7aad86;
+  --ok-wash: #1c241d;
+  --warn:    #cfae5e;
+  --warn-wash: #262115;
+  --danger:  #d97a6c;
+  --danger-wash: #2a1c19;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--ground);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 16px;
+  line-height: 1.62;
+  -webkit-font-smoothing: antialiased;
+}
+
+.shell {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0;
+  max-width: 1320px;
+  margin: 0 auto;
+  padding-inline: 20px;
+}
+
+@media (min-width: 1040px) {
+  .shell { grid-template-columns: 224px minmax(0, 1fr); gap: 56px; padding-inline: 32px; }
+}
+
+/* ── Contents rail ─────────────────────────────────────────── */
+
+.rail { padding-block: 24px 0; }
+
+@media (min-width: 1040px) {
+  .rail {
+    position: sticky;
+    top: env(safe-area-inset-top, 0px);
+    align-self: start;
+    max-height: 100vh;
+    overflow-y: auto;
+    padding-block: 64px 40px;
+  }
+}
+
+.rail h2 {
+  font-family: var(--sans);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin: 0 0 12px;
+}
+
+.rail ol { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
+.rail a {
+  display: flex;
+  gap: 10px;
+  padding: 4px 0;
+  font-size: 13.5px;
+  line-height: 1.35;
+  color: var(--muted);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+}
+.rail a:hover { color: var(--accent); }
+.rail .n { font-family: var(--mono); font-size: 11.5px; padding-top: 2px; color: var(--rule-hi); }
+
+/* ── Flow ──────────────────────────────────────────────────── */
+
+main { padding-block: 32px 96px; min-width: 0; }
+@media (min-width: 1040px) { main { padding-block: 64px 120px; } }
+
+.prose { max-width: var(--measure); }
+
+p, ul, ol { margin: 0 0 18px; }
+main > p, main > ul, main > ol, section > p, section > ul, section > ol { max-width: var(--measure); }
+
+a { color: var(--accent); text-underline-offset: 2px; }
+
+h1 {
+  font-family: var(--serif);
+  font-size: clamp(34px, 6vw, 52px);
+  font-weight: 600;
+  line-height: 1.08;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+  margin: 0 0 16px;
+}
+
+h2 {
+  font-family: var(--serif);
+  font-size: clamp(24px, 3.4vw, 31px);
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -0.012em;
+  text-wrap: balance;
+  margin: 0 0 14px;
+}
+
+h3 {
+  font-family: var(--sans);
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  margin: 30px 0 10px;
+  text-wrap: balance;
+}
+
+h4 {
+  font-family: var(--sans);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin: 26px 0 8px;
+}
+
+section { padding-block: 44px 8px; border-top: 1px solid var(--rule); }
+section:first-of-type { border-top: none; }
+
+.eyebrow {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+.eyebrow .n {
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--accent);
+  letter-spacing: 0.04em;
+}
+.eyebrow .k {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.lede {
+  font-family: var(--serif);
+  font-size: 19px;
+  line-height: 1.55;
+  color: var(--muted);
+}
+
+code, .mono { font-family: var(--mono); font-size: 0.87em; }
+code {
+  background: var(--sunk);
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+  padding: 0.5px 4px;
+  word-break: break-word;
+}
+
+strong { font-weight: 600; }
+
+ul.tight, ol.tight { padding-left: 20px; }
+ul.tight li, ol.tight li { margin-bottom: 7px; }
+
+/* ── Masthead ──────────────────────────────────────────────── */
+
+.masthead { padding-block: 8px 40px; }
+.masthead .stamp {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  font-family: var(--mono);
+  font-size: 11.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--accent);
+  border: 1px solid var(--accent);
+  border-radius: 2px;
+  padding: 4px 9px;
+  margin-bottom: 22px;
+}
+.masthead .dot { width: 5px; height: 5px; border-radius: 50%; background: var(--accent); }
+
+.meta-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1px;
+  background: var(--rule);
+  border: 1px solid var(--rule);
+  margin-top: 32px;
+}
+.meta-grid > div { background: var(--surface); padding: 13px 15px; }
+.meta-grid dt {
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+.meta-grid dd {
+  margin: 0;
+  font-family: var(--mono);
+  font-size: 18px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+.meta-grid dd small { font-family: var(--sans); font-size: 12px; font-weight: 400; color: var(--muted); display: block; margin-top: 2px; letter-spacing: 0; text-transform: none; }
+
+/* ── Figures ───────────────────────────────────────────────── */
+
+figure {
+  margin: 28px 0 30px;
+  border: 1px solid var(--rule);
+  background: var(--surface);
+}
+figure .canvas { overflow-x: auto; padding: 22px 20px 8px; }
+figure svg { display: block; min-width: 560px; }
+figcaption {
+  border-top: 1px solid var(--rule);
+  padding: 11px 16px;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--muted);
+  background: var(--sunk);
+}
+figcaption b { color: var(--ink); font-weight: 600; }
+
+.svg-label { font-family: var(--sans); font-size: 11.5px; font-weight: 500; }
+.svg-small { font-family: var(--sans); font-size: 9.5px; }
+.svg-mono  { font-family: var(--mono); font-size: 10px; }
+.svg-lane  { font-family: var(--sans); font-size: 10px; font-weight: 600; letter-spacing: 0.09em; text-transform: uppercase; }
+
+/* ── Stage blocks ──────────────────────────────────────────── */
+
+.stage {
+  border: 1px solid var(--rule);
+  background: var(--surface);
+  margin: 0 0 14px;
+}
+.stage > header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 15px;
+  border-bottom: 1px solid var(--rule);
+  background: var(--sunk);
+}
+.stage > header .idx {
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--accent);
+}
+.stage > header h3 { margin: 0; font-size: 15.5px; }
+.stage > div { padding: 14px 15px; }
+.stage > div > :last-child { margin-bottom: 0; }
+
+.chip {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 2px 7px;
+  border-radius: 2px;
+  border: 1px solid;
+  white-space: nowrap;
+}
+.chip.det    { color: var(--ok);     border-color: var(--ok);     background: var(--ok-wash); }
+.chip.model  { color: var(--accent); border-color: var(--accent); background: var(--accent-wash); }
+.chip.human  { color: var(--muted);  border-color: var(--rule-hi); background: var(--sunk); }
+.chip.manual { color: var(--warn);   border-color: var(--warn);   background: var(--warn-wash); }
+
+/* ── Tables ────────────────────────────────────────────────── */
+
+.table-wrap { overflow-x: auto; margin: 18px 0 22px; border: 1px solid var(--rule); background: var(--surface); }
+table { border-collapse: collapse; width: 100%; min-width: 520px; font-size: 14px; }
+th, td { text-align: left; padding: 9px 14px; border-bottom: 1px solid var(--rule); vertical-align: top; }
+thead th {
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  background: var(--sunk);
+  white-space: nowrap;
+}
+tbody tr:last-child td { border-bottom: none; }
+td.num, th.num { font-family: var(--mono); font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+/* ── Callouts ──────────────────────────────────────────────── */
+
+.note {
+  border-left: 3px solid var(--accent);
+  background: var(--accent-wash);
+  padding: 13px 16px;
+  margin: 20px 0;
+  max-width: var(--measure);
+}
+.note > :last-child { margin-bottom: 0; }
+.note .tag {
+  display: block;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 5px;
+}
+.note.caution { border-left-color: var(--warn); background: var(--warn-wash); }
+.note.caution .tag { color: var(--warn); }
+
+/* ── Control cards ─────────────────────────────────────────── */
+
+.controls { display: grid; gap: 1px; background: var(--rule); border: 1px solid var(--rule); margin: 22px 0 26px; }
+@media (min-width: 720px) { .controls { grid-template-columns: 1fr 1fr; } }
+.control { background: var(--surface); padding: 15px 16px; }
+.control h4 { margin: 0 0 6px; color: var(--ink); letter-spacing: 0.02em; text-transform: none; font-size: 14.5px; }
+.control .where { font-family: var(--mono); font-size: 10.5px; color: var(--muted); display: block; margin-bottom: 7px; word-break: break-word; }
+.control p { margin: 0; font-size: 14px; line-height: 1.55; color: var(--muted); }
+.control p b { color: var(--ink); }
+
+footer {
+  border-top: 1px solid var(--rule);
+  margin-top: 56px;
+  padding-top: 20px;
+  font-size: 13px;
+  color: var(--muted);
+  max-width: var(--measure);
+}
+</style>
+
+<div class="shell">
+
+<nav class="rail" aria-label="Contents">
+  <h2>Contents</h2>
+  <ol>
+    <li><a href="#overview"><span class="n">00</span><span>What this system is</span></a></li>
+    <li><a href="#map"><span class="n">01</span><span>The pipeline, end to end</span></a></li>
+    <li><a href="#challenge"><span class="n">02</span><span>Standing up a challenge</span></a></li>
+    <li><a href="#teams"><span class="n">03</span><span>Teams and intake</span></a></li>
+    <li><a href="#scan"><span class="n">04</span><span>Scan</span></a></li>
+    <li><a href="#probe"><span class="n">05</span><span>Probe — running the app</span></a></li>
+    <li><a href="#discovery"><span class="n">06</span><span>Discovery</span></a></li>
+    <li><a href="#scoring"><span class="n">07</span><span>Scoring</span></a></li>
+    <li><a href="#rank"><span class="n">08</span><span>Aggregate and rank</span></a></li>
+    <li><a href="#review"><span class="n">09</span><span>Review and decide</span></a></li>
+    <li><a href="#gate"><span class="n">10</span><span>The calibration gate</span></a></li>
+    <li><a href="#determinism"><span class="n">11</span><span>What is deterministic</span></a></li>
+    <li><a href="#hallucination"><span class="n">12</span><span>Guarding against the model</span></a></li>
+    <li><a href="#batch"><span class="n">13</span><span>Running a cohort</span></a></li>
+  </ol>
+</nav>
+
+<main>
+
+<header class="masthead">
+  <span class="stamp"><span class="dot"></span>Architecture record</span>
+  <h1>How Crucible decides</h1>
+  <p class="lede prose">
+    Crucible evaluates hackathon submissions against a challenge — for completeness, innovation,
+    and the organisation's own principles, standards, security and risk posture. This is the
+    whole pipeline, stage by stage: what each step does, which steps a model touches, and the
+    machinery that exists so that a model's confident sentence never becomes a team's elimination
+    on its own.
+  </p>
+
+  <dl class="meta-grid">
+    <div><dt>Pipeline stages</dt><dd>11<small>3 of them model-driven</small></dd></div>
+    <div><dt>Registered LLM calls</dt><dd>16<small>no ad-hoc prompts exist</small></dd></div>
+    <div><dt>Scoring runs per cohort</dt><dd>2<small>independent, then compared</small></dd></div>
+    <div><dt>Evidence granularity</dt><dd>file:line<small>on every score and finding</small></dd></div>
+  </dl>
+</header>
+
+<!-- ───────────────────────────────────────────────────────── -->
+<section id="overview">
+  <div class="eyebrow"><span class="n">00</span><span class="k">Premise</span></div>
+  <h2>A system built to be argued with</h2>
+
+  <div class="prose">
+    <p>
+      Crucible's design starts from an uncomfortable fact: it is going to eliminate teams, and
+      some of those teams will disagree. Every structural decision in it follows from wanting
+      that argument to be winnable on the merits — by either side.
+    </p>
+    <p>That produces three rules which recur at every layer:</p>
+    <ul class="tight">
+      <li>
+        <strong>Nothing is scored without a citation.</strong> Every score and every finding
+        carries a file path and a line range drawn from a persisted scan, so a disputed judgement
+        can be checked rather than debated.
+      </li>
+      <li>
+        <strong>What could not be measured is excluded, never zeroed.</strong> A criterion nobody
+        could assess is recorded as unassessed and dropped from the denominator. Scoring it zero
+        would mark a team down for a gap in <em>our</em> reading, invisibly.
+      </li>
+      <li>
+        <strong>The model never has the last word.</strong> It cannot pick its own evidence, its
+        output is rejected unless it satisfies a schema, it runs twice, and a human decides
+        anything near the cut line.
+      </li>
+    </ul>
+  </div>
+</section>
+
+<!-- ───────────────────────────────────────────────────────── -->
+<section id="map">
+  <div class="eyebrow"><span class="n">01</span><span class="k">Map</span></div>
+  <h2>The pipeline, end to end</h2>
+
+  <p class="prose">
+    Eleven stages across three actors. The colour of each block is the thing worth reading first:
+    green blocks are deterministic and involve no model at all, sienna blocks are model-driven,
+    and grey blocks are a person deciding.
+  </p>
+
+  <figure>
+    <div class="canvas">
+      <svg viewBox="0 0 1180 400" width="100%" height="400" role="img" aria-labelledby="fig1t">
+        <title id="fig1t">The eleven pipeline stages arranged across organiser, team and system lanes</title>
+
+        <!-- lane backgrounds -->
+        <rect x="0" y="34"  width="1180" height="96"  fill="var(--sunk)"></rect>
+        <rect x="0" y="238" width="1180" height="96"  fill="var(--sunk)"></rect>
+
+        <!-- lane labels -->
+        <text x="6" y="28"  class="svg-lane" fill="var(--muted)">Organiser</text>
+        <text x="6" y="164" class="svg-lane" fill="var(--muted)">System</text>
+        <text x="6" y="232" class="svg-lane" fill="var(--muted)">Team</text>
+
+        <!-- connector spine -->
+        <line x1="84" y1="196" x2="1120" y2="196" stroke="var(--rule-hi)" stroke-width="1"></line>
+
+        <!-- ORGANISER ROW -->
+        <g>
+          <rect x="16"  y="52" width="122" height="60" rx="2" fill="var(--surface)" stroke="var(--rule-hi)"></rect>
+          <text x="26" y="72" class="svg-mono" fill="var(--accent)">01</text>
+          <text x="26" y="88" class="svg-label" fill="var(--ink)">Challenge</text>
+          <text x="26" y="103" class="svg-small" fill="var(--muted)">brief uploaded</text>
+
+          <rect x="152" y="52" width="122" height="60" rx="2" fill="var(--accent-wash)" stroke="var(--accent)"></rect>
+          <text x="162" y="72" class="svg-mono" fill="var(--accent)">02</text>
+          <text x="162" y="88" class="svg-label" fill="var(--ink)">Rubric drafted</text>
+          <text x="162" y="103" class="svg-small" fill="var(--muted)">+ quality gate</text>
+
+          <rect x="288" y="52" width="122" height="60" rx="2" fill="var(--surface)" stroke="var(--rule-hi)"></rect>
+          <text x="298" y="72" class="svg-mono" fill="var(--accent)">03</text>
+          <text x="298" y="88" class="svg-label" fill="var(--ink)">Weights set</text>
+          <text x="298" y="103" class="svg-small" fill="var(--muted)">frozen, published</text>
+
+          <rect x="424" y="52" width="122" height="60" rx="2" fill="var(--surface)" stroke="var(--rule-hi)"></rect>
+          <text x="434" y="72" class="svg-mono" fill="var(--accent)">04</text>
+          <text x="434" y="88" class="svg-label" fill="var(--ink)">Intake opened</text>
+          <text x="434" y="103" class="svg-small" fill="var(--muted)">tokens issued</text>
+        </g>
+
+        <!-- TEAM ROW -->
+        <rect x="560" y="256" width="122" height="60" rx="2" fill="var(--surface)" stroke="var(--rule-hi)"></rect>
+        <text x="570" y="276" class="svg-mono" fill="var(--accent)">05</text>
+        <text x="570" y="292" class="svg-label" fill="var(--ink)">Submission</text>
+        <text x="570" y="307" class="svg-small" fill="var(--muted)">commit locked</text>
+
+        <!-- SYSTEM ROW -->
+        <g>
+          <rect x="560" y="146" width="104" height="60" rx="2" fill="var(--ok-wash)" stroke="var(--ok)"></rect>
+          <text x="570" y="166" class="svg-mono" fill="var(--ok)">06</text>
+          <text x="570" y="182" class="svg-label" fill="var(--ink)">Scan</text>
+          <text x="570" y="197" class="svg-small" fill="var(--muted)">no model</text>
+
+          <rect x="678" y="146" width="104" height="60" rx="2" fill="var(--ok-wash)" stroke="var(--ok)"></rect>
+          <text x="688" y="166" class="svg-mono" fill="var(--ok)">07</text>
+          <text x="688" y="182" class="svg-label" fill="var(--ink)">Probe</text>
+          <text x="688" y="197" class="svg-small" fill="var(--muted)">really runs it</text>
+
+          <rect x="796" y="146" width="104" height="60" rx="2" fill="var(--accent-wash)" stroke="var(--accent)" stroke-dasharray="3 2"></rect>
+          <text x="806" y="166" class="svg-mono" fill="var(--accent)">08</text>
+          <text x="806" y="182" class="svg-label" fill="var(--ink)">Discovery</text>
+          <text x="806" y="197" class="svg-small" fill="var(--muted)">opt-in, manual</text>
+
+          <rect x="914" y="146" width="104" height="60" rx="2" fill="var(--accent-wash)" stroke="var(--accent)"></rect>
+          <text x="924" y="166" class="svg-mono" fill="var(--accent)">09</text>
+          <text x="924" y="182" class="svg-label" fill="var(--ink)">Score &#215;2</text>
+          <text x="924" y="197" class="svg-small" fill="var(--muted)">independent</text>
+
+          <rect x="1032" y="146" width="104" height="60" rx="2" fill="var(--ok-wash)" stroke="var(--ok)"></rect>
+          <text x="1042" y="166" class="svg-mono" fill="var(--ok)">10</text>
+          <text x="1042" y="182" class="svg-label" fill="var(--ink)">Rank</text>
+          <text x="1042" y="197" class="svg-small" fill="var(--muted)">pure maths</text>
+        </g>
+
+        <!-- decision -->
+        <rect x="1032" y="52" width="122" height="60" rx="2" fill="var(--surface)" stroke="var(--rule-hi)" stroke-width="2"></rect>
+        <text x="1042" y="72" class="svg-mono" fill="var(--accent)">11</text>
+        <text x="1042" y="88" class="svg-label" fill="var(--ink)">Human decides</text>
+        <text x="1042" y="103" class="svg-small" fill="var(--muted)">with reasons</text>
+
+        <!-- arrows down/up -->
+        <path d="M485 112 L485 130 L619 130 L619 146" fill="none" stroke="var(--rule-hi)" stroke-width="1"></path>
+        <path d="M621 256 L621 216" fill="none" stroke="var(--rule-hi)" stroke-width="1"></path>
+        <path d="M1084 146 L1084 112" fill="none" stroke="var(--rule-hi)" stroke-width="1.5"></path>
+
+        <!-- gate marker -->
+        <g>
+          <line x1="1006" y1="130" x2="1006" y2="352" stroke="var(--danger)" stroke-width="1.5" stroke-dasharray="4 3"></line>
+          <text x="1010" y="348" class="svg-small" fill="var(--danger)">calibration gate</text>
+        </g>
+
+        <!-- legend -->
+        <g>
+          <rect x="16" y="356" width="11" height="11" fill="var(--ok-wash)" stroke="var(--ok)"></rect>
+          <text x="34" y="366" class="svg-small" fill="var(--muted)">deterministic</text>
+          <rect x="136" y="356" width="11" height="11" fill="var(--accent-wash)" stroke="var(--accent)"></rect>
+          <text x="154" y="366" class="svg-small" fill="var(--muted)">model-driven</text>
+          <rect x="262" y="356" width="11" height="11" fill="var(--surface)" stroke="var(--rule-hi)"></rect>
+          <text x="280" y="366" class="svg-small" fill="var(--muted)">person</text>
+          <rect x="348" y="356" width="11" height="11" fill="var(--accent-wash)" stroke="var(--accent)" stroke-dasharray="3 2"></rect>
+          <text x="366" y="366" class="svg-small" fill="var(--muted)">opt-in, not in the batch</text>
+        </g>
+      </svg>
+    </div>
+    <figcaption>
+      <b>Stage 08 is dashed on purpose.</b> Discovery is the one stage that is neither automatic
+      nor part of the batch run — it is triggered per submission, by hand, and only when the
+      feature flag is on.
+    </figcaption>
+  </figure>
+</section>
+
+<!-- ───────────────────────────────────────────────────────── -->
+<section id="challenge">
+  <div class="eyebrow"><span class="n">02</span><span class="k">Setup</span></div>
+  <h2>Standing up a challenge</h2>
+
+  <p class="prose">
+    A challenge holds the brief teams answer and the rubric they are judged by. The order below
+    is enforced, not merely suggested: rubric generation is unavailable until at least one
+    document's text has been extracted, because criteria cite passages of the brief by location
+    and there is nothing to cite until the text exists.
+  </p>
+
+  <div class="stage">
+    <header><span class="idx">2.1</span><h3>Create and upload</h3><span class="chip human">Person</span></header>
+    <div>
+      <p>
+        A challenge starts as <code>DRAFT</code>. The organiser uploads a brief and any
+        supporting material — four kinds are recognised: <code>BRIEF</code>,
+        <code>SUPPORTING</code>, <code>RULES</code>, <code>DATA_SAMPLE</code>. Uploads are capped
+        at 25&nbsp;MiB and streamed rather than buffered.
+      </p>
+    </div>
+  </div>
+
+  <div class="stage">
+    <header><span class="idx">2.2</span><h3>Extract the text</h3><span class="chip det">Deterministic</span></header>
+    <div>
+      <p>
+        Extraction status is tracked <em>per document</em>, not as one summary:
+        <code>PENDING</code>, <code>EXTRACTED</code>, <code>FAILED</code>,
+        <code>UNSUPPORTED</code>. That distinction matters — a scanned PDF with no text layer
+        produces no criteria, and an organiser who sees only an aggregate would generate a rubric
+        from whichever documents happened to work, without being told which those were.
+      </p>
+    </div>
+  </div>
+
+  <div class="stage">
+    <header><span class="idx">2.3</span><h3>Draft the criteria</h3><span class="chip model">Model</span></header>
+    <div>
+      <p>
+        Four registered calls do this work. <code>rubrics.criteria_generate</code> drafts criteria
+        from the extracted brief — the only call in the system with a non-zero temperature
+        (0.20), because drafting is the one task where a little variety helps. Then
+        <code>rubrics.quality_gate</code> checks whether each criterion can actually be scored
+        from a repository, and <code>rubrics.criteria_review</code> and
+        <code>rubrics.criteria_judge</code> run on Opus for a second reading.
+      </p>
+      <div class="note">
+        <span class="tag">The rule the gate enforces</span>
+        <p>
+          A rejected criterion is regenerated <em>once</em>, then surfaced as
+          <code>NEEDS_REWRITE</code> — never silently dropped. Dropping it would quietly reshape
+          the rubric the committee thinks it is reviewing.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <div class="stage">
+    <header><span class="idx">2.4</span><h3>Set the weights</h3><span class="chip human">Person</span></header>
+    <div>
+      <p>Weighting happens at two levels, and both are the committee's to decide.</p>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Level</th><th>What it controls</th><th class="num">Must total</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><b>Dimension weights</b></td>
+              <td>How much each of the five dimensions counts toward the composite</td>
+              <td class="num">1.00</td>
+            </tr>
+            <tr>
+              <td><b>Criterion weights</b></td>
+              <td>Relative importance <em>within</em> one dimension</td>
+              <td class="num">1.00 per dimension</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p>
+        Weights that do not total 1.00 block the save and say so. <strong>Nothing is normalised
+        silently.</strong> A committee setting weights is deciding relative importance; quietly
+        rescaling their input would mean the rubric does not say what they think it says. A
+        dimension weighted zero is labelled <em>not scored at all</em> — which is different from
+        being assessed and scoring badly, and the ranking will not mention it.
+      </p>
+    </div>
+  </div>
+
+  <div class="stage">
+    <header><span class="idx">2.5</span><h3>Approve, freeze, publish</h3><span class="chip human">Person</span></header>
+    <div>
+      <p>
+        Freezing is enforced by a database trigger, not by a service check — a frozen rubric
+        refuses criterion writes at the storage layer. Publishing makes it readable without an
+        account, because teams are entitled to know the standard before they are judged by it.
+        <strong>No submission is accepted until a published rubric exists.</strong>
+      </p>
+      <p>
+        A frozen rubric cannot be edited. It can be <em>superseded</em>: a new version carries the
+        source's criteria and dimension weights forward, ready to change. The quality gate's
+        verdict is deliberately not copied — it judged the old wording, and inheriting it would
+        either excuse a fresh problem or condemn a fixed one.
+      </p>
+    </div>
+  </div>
+
+  <h3>The five dimensions</h3>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>Dimension</th><th>What it asks</th><th>Assessed by</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><b>Challenge fidelity</b></td><td>Did you solve the challenge you chose?</td><td><span class="chip model">Model</span></td></tr>
+        <tr><td><b>Engineering quality</b></td><td>Is the code any good — from metrics <em>and</em> source</td><td><span class="chip model">Model</span></td></tr>
+        <tr><td><b>Principles &amp; standards</b></td><td>Adoption of the organisation's architecture principles and IT standards</td><td><span class="chip model">Model</span></td></tr>
+        <tr><td><b>Runs</b></td><td>Does it build and start?</td><td><span class="chip det">Deterministic</span></td></tr>
+        <tr><td><b>Originality</b></td><td>Advisory signal on boilerplate share, templates, provenance</td><td><span class="chip model">Model</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ───────────────────────────────────────────────────────── -->
+<section id="teams">
+  <div class="eyebrow"><span class="n">03</span><span class="k">Intake</span></div>
+  <h2>Teams and intake</h2>
+
+  <div class="note caution">
+    <span class="tag">Worth knowing up front</span>
+    <p>
+      <strong>There is no team entity.</strong> A team is a name on a submission —
+      <code>team_name</code>, unique per challenge among current submissions. There is no roster,
+      no registration step, and no assignment of teams to challenges. A team joins a challenge by
+      submitting to it. This is a deliberate simplification for a single evening event, and it has
+      real consequences that are catalogued in the companion gap register.
+    </p>
+  </div>
+
+  <h3>How a team is admitted</h3>
+  <p class="prose">
+    Teams have no Crucible account by design — issuing fifty accounts for one evening is all risk
+    and no benefit. A team proves itself with a scoped, revocable <strong>submission
+    token</strong> instead.
+  </p>
+  <ul class="tight prose">
+    <li>The organiser issues one token per team. Only its SHA-256 is stored; the plaintext exists
+      exactly once, in the response that created it.</li>
+    <li>Revocation is checked on every call with no caching, so it takes effect immediately.</li>
+    <li>A token that has never been used is flagged — before a deadline that usually means it
+      never reached the team, and afterwards nothing can be done about it.</li>
+  </ul>
+
+  <h3>How a submission is made</h3>
+  <p class="prose">
+    Through a public page. The team gives their name, a contact email, the challenge, the
+    repository URL, and — crucially — <strong>how the project builds</strong>: either a Dockerfile
+    path or a build-and-start command. That single field is the difference between a probe
+    reporting <code>RUNS</code> and one reporting <code>BUILD_FAILED</code>.
+  </p>
+  <p class="prose">
+    An organiser can also submit on a team's behalf. Either way the same preconditions hold:
+    intake must be open, self-service must be enabled, a published rubric must exist, and the
+    repository host must be on the allow-list (<code>github.com</code>, <code>gitlab.com</code>).
+  </p>
+
+  <div class="note">
+    <span class="tag">The commit lock</span>
+    <p>
+      On submission the repository is validated and its current commit recorded. <strong>That
+      exact commit is what gets evaluated.</strong> Later pushes do not change it — a team wanting
+      a later commit judged must submit again, which supersedes their previous entry with a
+      version bump rather than overwriting it.
+    </p>
+  </div>
+
+  <h3>The window</h3>
+  <p class="prose">
+    Intake reports one of five states: <code>NO_WINDOW</code>, <code>NOT_YET_OPEN</code>,
+    <code>OPEN</code>, <code>CLOSED</code>, <code>LOCKED</code>. Closing is a date and is
+    reversible. <strong>Locking is permanent</strong> — no further entry, correction or
+    resubmission is accepted afterwards, including from a team whose repository turned out to be
+    private. That irreversibility is the point of it, which is why the two are separate actions.
+  </p>
+</section>
+
+<!-- ───────────────────────────────────────────────────────── -->
+<section id="scan">
+  <div class="eyebrow"><span class="n">04</span><span class="k">Evidence</span></div>
+  <h2>Scan</h2>
+  <p><span class="chip det">Deterministic — no model participates</span></p>
+
+  <p class="prose">
+    The repository is cloned at the locked commit and read under an explicit file budget. Nothing
+    downstream ever clones: scoring and discovery both read the <em>persisted</em> scan, because a
+    step that could fetch code on its own would make the evaluated commit, the cost and the timing
+    unpredictable.
+  </p>
+
+  <h4>What a scan records</h4>
+  <ul class="tight prose">
+    <li>Source files with paths and contents, up to the budget</li>
+    <li>Metrics: total and code lines, languages, longest files, test/CI/Dockerfile/README
+      presence, dependency count</li>
+    <li><b>Repository markers</b> read straight from the filesystem, independent of the file
+      budget — so "has tests" stays true even when the budget stopped short of reading them</li>
+    <li><code>filesAnalysed</code>, <code>filesTotal</code> and <code>budgetTruncated</code>, so
+      "we looked everywhere" is a checkable claim rather than an assertion</li>
+    <li><b>Provenance</b>: commit-history analysis producing <em>flags</em>, never exclusions —
+      a high single-commit share or work outside the event window is surfaced for a person to
+      judge, not acted on automatically</li>
+  </ul>
+</section>
+
+<!-- ───────────────────────────────────────────────────────── -->
+<section id="probe">
+  <div class="eyebrow"><span class="n">05</span><span class="k">Evidence</span></div>
+  <h2>Probe — yes, it really runs the app</h2>
+  <p><span class="chip det">Deterministic — no model participates</span></p>
+
+  <p class="prose">
+    This is the answer to "are we able to run the app?": <strong>yes</strong>. Each submission is
+    built and started inside a container, and the Runs dimension is derived from what actually
+    happened. No model participates in that dimension at all — it is the one objective score in
+    the rubric.
+  </p>
+
+  <figure>
+    <div class="canvas">
+      <svg viewBox="0 0 1000 268" width="100%" height="268" role="img" aria-labelledby="fig2t">
+        <title id="fig2t">Probe outcomes mapped to runs grades and scores</title>
+
+        <rect x="12" y="24" width="150" height="56" rx="2" fill="var(--surface)" stroke="var(--rule-hi)"></rect>
+        <text x="24" y="48" class="svg-label" fill="var(--ink)">Locked commit</text>
+        <text x="24" y="65" class="svg-small" fill="var(--muted)">copied, never mounted</text>
+
+        <rect x="196" y="24" width="150" height="56" rx="2" fill="var(--sunk)" stroke="var(--rule-hi)"></rect>
+        <text x="208" y="48" class="svg-label" fill="var(--ink)">Sandbox</text>
+        <text x="208" y="65" class="svg-small" fill="var(--muted)">no network by default</text>
+
+        <line x1="162" y1="52" x2="196" y2="52" stroke="var(--rule-hi)"></line>
+        <line x1="346" y1="52" x2="386" y2="52" stroke="var(--rule-hi)"></line>
+
+        <!-- outcome rows -->
+        <g>
+          <rect x="386" y="8" width="212" height="34" rx="2" fill="var(--ok-wash)" stroke="var(--ok)"></rect>
+          <text x="398" y="30" class="svg-mono" fill="var(--ink)">RUNS</text>
+          <rect x="386" y="50" width="212" height="34" rx="2" fill="var(--surface)" stroke="var(--rule-hi)"></rect>
+          <text x="398" y="72" class="svg-mono" fill="var(--ink)">BUILDS_ONLY</text>
+          <rect x="386" y="92" width="212" height="34" rx="2" fill="var(--surface)" stroke="var(--rule-hi)"></rect>
+          <text x="398" y="114" class="svg-mono" fill="var(--ink)">BUILD_FAILED</text>
+          <rect x="386" y="134" width="212" height="34" rx="2" fill="var(--surface)" stroke="var(--rule-hi)"></rect>
+          <text x="398" y="156" class="svg-mono" fill="var(--ink)">TIMED_OUT</text>
+          <rect x="386" y="176" width="212" height="34" rx="2" fill="var(--surface)" stroke="var(--rule-hi)"></rect>
+          <text x="398" y="198" class="svg-mono" fill="var(--ink)">RESOURCE_EXCEEDED</text>
+          <rect x="386" y="218" width="212" height="34" rx="2" fill="var(--warn-wash)" stroke="var(--warn)"></rect>
+          <text x="398" y="234" class="svg-mono" fill="var(--ink)">UNSUPPORTED_STACK</text>
+          <text x="398" y="247" class="svg-mono" fill="var(--ink)">PROBE_ERROR</text>
+        </g>
+
+        <!-- grade column -->
+        <g>
+          <rect x="676" y="8"   width="150" height="34" rx="2" fill="var(--ok-wash)" stroke="var(--ok)"></rect>
+          <text x="688" y="30" class="svg-label" fill="var(--ink)">RUNS</text>
+          <text x="800" y="30" class="svg-mono" fill="var(--ok)">4</text>
+
+          <rect x="676" y="50"  width="150" height="34" rx="2" fill="var(--surface)" stroke="var(--rule-hi)"></rect>
+          <text x="688" y="72" class="svg-label" fill="var(--ink)">BUILDS_ONLY</text>
+          <text x="800" y="72" class="svg-mono" fill="var(--muted)">2</text>
+
+          <rect x="676" y="92"  width="150" height="118" rx="2" fill="var(--surface)" stroke="var(--rule-hi)"></rect>
+          <text x="688" y="146" class="svg-label" fill="var(--ink)">FAILS_TO_BUILD</text>
+          <text x="800" y="146" class="svg-mono" fill="var(--muted)">0</text>
+
+          <rect x="676" y="218" width="150" height="34" rx="2" fill="var(--warn-wash)" stroke="var(--warn)"></rect>
+          <text x="688" y="240" class="svg-label" fill="var(--ink)">UNSUPPORTED</text>
+          <text x="800" y="240" class="svg-mono" fill="var(--warn)">&#8722;1</text>
+        </g>
+
+        <!-- links -->
+        <path d="M598 25 L676 25"   fill="none" stroke="var(--rule-hi)"></path>
+        <path d="M598 67 L676 67"   fill="none" stroke="var(--rule-hi)"></path>
+        <path d="M598 109 L638 109 L638 151 L676 151" fill="none" stroke="var(--rule-hi)"></path>
+        <path d="M598 151 L676 151" fill="none" stroke="var(--rule-hi)"></path>
+        <path d="M598 193 L638 193 L638 151 L676 151" fill="none" stroke="var(--rule-hi)"></path>
+        <path d="M598 235 L676 235" fill="none" stroke="var(--rule-hi)"></path>
+
+        <text x="846" y="235" class="svg-small" fill="var(--warn)">excluded, not zero</text>
+        <text x="846" y="248" class="svg-small" fill="var(--muted)">the harness failed, not the team</text>
+      </svg>
+    </div>
+    <figcaption>
+      <b>The bottom row is the interesting one.</b> A stack we cannot build, or a harness that
+      broke, scores <code>&#8722;1</code> — a sentinel meaning <em>excluded from the
+      denominator</em>. Scoring it zero would punish a team for our missing base image.
+    </figcaption>
+  </figure>
+
+  <h3>Containment</h3>
+  <p class="prose">
+    The probe executes untrusted code, so the sandbox is the highest-risk surface in the system
+    and is tested with deliberately hostile fixtures — a fork bomb, a memory bomb, and a process
+    that attempts network egress.
+  </p>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Limit</th><th class="num">Default</th><th>Why</th></tr></thead>
+      <tbody>
+        <tr><td>Wall clock</td><td class="num">300&nbsp;s</td><td>A build that never ends is a build that failed</td></tr>
+        <tr><td>Settle period</td><td class="num">10&nbsp;s</td><td>Must stay up this long to count as running</td></tr>
+        <tr><td>Memory</td><td class="num">2048&nbsp;MB</td><td>Caps the memory bomb</td></tr>
+        <tr><td>CPUs</td><td class="num">2</td><td>One submission cannot starve the batch</td></tr>
+        <tr><td>Processes</td><td class="num">256</td><td>Caps the fork bomb</td></tr>
+        <tr><td>Log retained</td><td class="num">256&nbsp;KiB</td><td>Enough to diagnose, bounded</td></tr>
+        <tr><td><b>Network egress</b></td><td class="num">none</td><td>Empty allow-list by default; whatever is permitted is recorded on the probe</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ───────────────────────────────────────────────────────── -->
+<section id="discovery">
+  <div class="eyebrow"><span class="n">06</span><span class="k">Description</span></div>
+  <h2>Discovery</h2>
+  <p>
+    <span class="chip model">Model</span>
+    <span class="chip manual">Manual trigger only</span>
+    <span class="chip manual">Off by default</span>
+  </p>
+
+  <p class="prose">
+    Scoring says how <em>well</em> a submission did. Discovery says what it <em>is</em>: its API
+    surface, its data model, what it can do, what it talks to, what it is built on, and what a
+    security reviewer would want to look at.
+  </p>
+
+  <h3>How it is run</h3>
+  <p class="prose">
+    <strong>Manually, per submission, and only that.</strong> It is not part of the batch run —
+    the batch stages are scan, probe and score. It is not triggered as a side effect of scanning
+    or scoring. It is gated behind a feature flag that ships <code>false</code>.
+  </p>
+  <p class="prose">
+    The reasoning is cost: roughly seven model calls per submission, describing a submission
+    rather than scoring one. A step that fired automatically would make spend and timing
+    unpredictable across a cohort. The trade-off this creates for a fifty-team event is a real
+    one and is recorded in the gap register.
+  </p>
+
+  <h3>How it works</h3>
+
+  <figure>
+    <div class="canvas">
+      <svg viewBox="0 0 1060 398" width="100%" height="398" role="img" aria-labelledby="fig3t">
+        <title id="fig3t">Discovery fans one scan out to seven concern extractors and back into the evaluation</title>
+
+        <rect x="12" y="160" width="132" height="60" rx="2" fill="var(--ok-wash)" stroke="var(--ok)"></rect>
+        <text x="24" y="184" class="svg-label" fill="var(--ink)">Persisted scan</text>
+        <text x="24" y="200" class="svg-small" fill="var(--muted)">never clones</text>
+
+        <rect x="176" y="150" width="140" height="80" rx="2" fill="var(--ok-wash)" stroke="var(--ok)"></rect>
+        <text x="188" y="174" class="svg-label" fill="var(--ink)">Context builder</text>
+        <text x="188" y="190" class="svg-small" fill="var(--muted)">deterministic ranking</text>
+        <text x="188" y="205" class="svg-mono" fill="var(--muted)">90 KB / 40 files</text>
+        <text x="188" y="220" class="svg-small" fill="var(--muted)">per concern</text>
+
+        <line x1="144" y1="190" x2="176" y2="190" stroke="var(--rule-hi)"></line>
+
+        <!-- seven concerns -->
+        <g>
+          <rect x="376" y="10"  width="150" height="30" rx="2" fill="var(--accent-wash)" stroke="var(--accent)"></rect>
+          <text x="388" y="30" class="svg-label" fill="var(--ink)">API surface</text>
+          <rect x="376" y="48"  width="150" height="30" rx="2" fill="var(--accent-wash)" stroke="var(--accent)"></rect>
+          <text x="388" y="68" class="svg-label" fill="var(--ink)">Data model</text>
+          <rect x="376" y="86"  width="150" height="30" rx="2" fill="var(--accent-wash)" stroke="var(--accent)"></rect>
+          <text x="388" y="106" class="svg-label" fill="var(--ink)">Capabilities</text>
+          <rect x="376" y="124" width="150" height="30" rx="2" fill="var(--accent-wash)" stroke="var(--accent)"></rect>
+          <text x="388" y="144" class="svg-label" fill="var(--ink)">Integrations</text>
+          <rect x="376" y="162" width="150" height="30" rx="2" fill="var(--accent-wash)" stroke="var(--accent)"></rect>
+          <text x="388" y="182" class="svg-label" fill="var(--ink)">Security</text>
+          <rect x="376" y="200" width="150" height="30" rx="2" fill="var(--accent-wash)" stroke="var(--accent)"></rect>
+          <text x="388" y="220" class="svg-label" fill="var(--ink)">Stack</text>
+          <rect x="376" y="248" width="150" height="34" rx="2" fill="var(--accent-wash)" stroke="var(--accent)" stroke-dasharray="3 2"></rect>
+          <text x="388" y="264" class="svg-label" fill="var(--ink)">Doc vs code</text>
+          <text x="388" y="277" class="svg-small" fill="var(--muted)">runs last</text>
+        </g>
+
+        <!-- fan lines -->
+        <g stroke="var(--rule-hi)" fill="none">
+          <path d="M316 190 L346 190 L346 25 L376 25"></path>
+          <path d="M316 190 L346 190 L346 63 L376 63"></path>
+          <path d="M316 190 L346 190 L346 101 L376 101"></path>
+          <path d="M316 190 L346 190 L346 139 L376 139"></path>
+          <path d="M316 190 L346 190 L346 177 L376 177"></path>
+          <path d="M316 190 L346 190 L346 215 L376 215"></path>
+          <path d="M316 190 L346 190 L346 265 L376 265"></path>
+        </g>
+
+        <!-- feedback from six into claims -->
+        <path d="M526 120 L556 120 L556 265 L526 265" fill="none" stroke="var(--accent)" stroke-dasharray="3 2"></path>
+        <text x="562" y="252" class="svg-small" fill="var(--accent)">the six feed the seventh</text>
+
+        <!-- outcomes -->
+        <rect x="620" y="86" width="176" height="108" rx="2" fill="var(--surface)" stroke="var(--rule-hi)"></rect>
+        <text x="632" y="106" class="svg-lane" fill="var(--muted)">Per-concern outcome</text>
+        <text x="632" y="128" class="svg-mono" fill="var(--ok)">FOUND</text>
+        <text x="632" y="146" class="svg-mono" fill="var(--ok)">NONE_FOUND</text>
+        <text x="632" y="164" class="svg-mono" fill="var(--warn)">INSUFFICIENT_EVIDENCE</text>
+        <text x="632" y="182" class="svg-mono" fill="var(--danger)">FAILED</text>
+
+        <line x1="526" y1="140" x2="620" y2="140" stroke="var(--rule-hi)"></line>
+
+        <text x="632" y="216" class="svg-small" fill="var(--muted)">the first two are facts about</text>
+        <text x="632" y="230" class="svg-small" fill="var(--muted)">the submission — the last two</text>
+        <text x="632" y="244" class="svg-small" fill="var(--muted)">are facts about our reading</text>
+
+        <!-- downstream -->
+        <rect x="856" y="86" width="190" height="52" rx="2" fill="var(--surface)" stroke="var(--rule-hi)"></rect>
+        <text x="868" y="107" class="svg-label" fill="var(--ink)">Reviewer&#8217;s page</text>
+        <text x="868" y="124" class="svg-small" fill="var(--muted)">counts, gaps, citations</text>
+
+        <rect x="856" y="152" width="190" height="52" rx="2" fill="var(--accent-wash)" stroke="var(--accent)"></rect>
+        <text x="868" y="173" class="svg-label" fill="var(--ink)">Principles &amp; standards</text>
+        <text x="868" y="190" class="svg-small" fill="var(--muted)">digest, as extra context</text>
+
+        <line x1="796" y1="112" x2="856" y2="112" stroke="var(--rule-hi)"></line>
+        <line x1="796" y1="168" x2="856" y2="168" stroke="var(--rule-hi)"></line>
+
+        <!-- caps note -->
+        <rect x="376" y="304" width="670" height="60" rx="2" fill="var(--sunk)" stroke="var(--rule)"></rect>
+        <text x="392" y="325" class="svg-lane" fill="var(--muted)">Bounds</text>
+        <text x="392" y="344" class="svg-small" fill="var(--ink)">80 findings per kind &#183; 40 conflicts &#183; temperature 0.00 &#183; 2 attempts &#183; 180 s timeout &#183; one run current per submission</text>
+        <text x="392" y="358" class="svg-small" fill="var(--muted)">Re-running supersedes rather than accumulating; the superseded run keeps its findings as evidence.</text>
+      </svg>
+    </div>
+    <figcaption>
+      <b>Seven calls, not one.</b> Asking a single prompt for seven shapes means one malformed
+      fragment loses the whole description. Here a failed extractor costs one concern, is recorded
+      as such, and the other six stand.
+    </figcaption>
+  </figure>
+
+  <h3>Which model, and how it is asked</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Setting</th><th class="num">Value</th><th>Reasoning</th></tr></thead>
+      <tbody>
+        <tr><td>Model</td><td class="num">claude-sonnet-5</td><td>Extraction is a reading task, not a judgement one</td></tr>
+        <tr><td>Temperature</td><td class="num">0.00</td><td>Two runs over one repository should agree</td></tr>
+        <tr><td>Attempts</td><td class="num">2</td><td>Lower than scoring's 3 — a gap here is visible, not silent</td></tr>
+        <tr><td>Criticality</td><td class="num">STANDARD</td><td>Discovery describes; it does not score</td></tr>
+        <tr><td>Prompt logging</td><td class="num">off</td><td>Prompts carry submission source</td></tr>
+        <tr><td>Context budget</td><td class="num">90,000 B</td><td>Wider than scoring's 60&nbsp;KB: discovery reads breadth where a criterion reads depth</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>How it feeds the evaluation</h3>
+  <p class="prose">
+    Discovery is the evidence base the evaluation reads from, not a parallel description beside
+    it. The principles and standards evaluators receive a digest of what was found alongside the
+    source excerpts they already get — so a principle about layering is assessed by someone who
+    has been told where the layers are. Two guards hold that honest, and both are enforced in code
+    rather than asked for in a prompt:
+  </p>
+  <ul class="tight prose">
+    <li><strong>Additional, never instead.</strong> The digest is appended to a context that
+      already contains real source. An evaluator scoring from the digest alone would be grading a
+      summary of the work.</li>
+    <li><strong>A concern that could not be extracted is passed as <code>NOT DETERMINED</code>,
+      never as "none found"</strong> — with an explicit instruction not to read it as an absence.
+      If the integrations extractor failed, an evaluator must not conclude the team integrates
+      with nothing and mark them for it.</li>
+  </ul>
+  <p class="prose">
+    A submission with no discovery produces an explicit sentence saying none was run and that this
+    is not a deficiency in the submission — not a blank section, which would read as "nothing
+    found".
+  </p>
+</section>
+
+<!-- ───────────────────────────────────────────────────────── -->
+<section id="scoring">
+  <div class="eyebrow"><span class="n">07</span><span class="k">Judgement</span></div>
+  <h2>Scoring</h2>
+  <p><span class="chip model">Model</span> <span class="chip det">Evidence selection deterministic</span></p>
+
+  <p class="prose">
+    Each criterion is scored from <em>real source with real line numbers</em>, selected for that
+    criterion. This is the pivot the whole design turns on: an evaluator that received a
+    tech-stack list and a summary blob would be a second-order pass over a description of the
+    work rather than the work.
+  </p>
+
+  <h3>How evidence is chosen</h3>
+  <div class="note">
+    <span class="tag">The model does not choose its own evidence</span>
+    <p>
+      Selection is deterministic and model-free. Terms are extracted from the criterion's
+      <em>evidence specification</em> — what a reader should be able to point at — and files are
+      ranked by how many distinct terms they mention, with a path that names the concept scoring
+      strongly, tests discounted to 0.7 and documentation to 0.5. A model choosing its own
+      evidence could choose evidence that supports the score it already prefers, and would make
+      two runs incomparable.
+    </p>
+  </div>
+
+  <h3>What comes back, and what happens when it doesn't</h3>
+  <figure>
+    <div class="canvas">
+      <svg viewBox="0 0 900 280" width="100%" height="280" role="img" aria-labelledby="fig4t">
+        <title id="fig4t">Decision tree showing that unscoreable criteria are excluded rather than zeroed</title>
+
+        <rect x="12" y="116" width="150" height="48" rx="2" fill="var(--surface)" stroke="var(--rule-hi)"></rect>
+        <text x="24" y="138" class="svg-label" fill="var(--ink)">One criterion</text>
+        <text x="24" y="154" class="svg-small" fill="var(--muted)">+ its evidence spec</text>
+
+        <!-- branch 1 -->
+        <path d="M162 140 L206 140 L206 42 L250 42" fill="none" stroke="var(--rule-hi)"></path>
+        <rect x="250" y="20" width="240" height="44" rx="2" fill="var(--warn-wash)" stroke="var(--warn)"></rect>
+        <text x="262" y="40" class="svg-label" fill="var(--ink)">No relevant file found</text>
+        <text x="262" y="55" class="svg-small" fill="var(--muted)">before any model call</text>
+
+        <!-- branch 2 -->
+        <path d="M162 140 L206 140 L206 140 L250 140" fill="none" stroke="var(--rule-hi)"></path>
+        <rect x="250" y="96" width="240" height="88" rx="2" fill="var(--accent-wash)" stroke="var(--accent)"></rect>
+        <text x="262" y="118" class="svg-label" fill="var(--ink)">Model scores it</text>
+        <text x="262" y="136" class="svg-small" fill="var(--muted)">against 5 verbatim anchors</text>
+        <text x="262" y="152" class="svg-small" fill="var(--muted)">must cite path + line range</text>
+        <text x="262" y="170" class="svg-small" fill="var(--muted)">schema-validated before use</text>
+
+        <!-- branch 3 -->
+        <path d="M162 140 L206 140 L206 236 L250 236" fill="none" stroke="var(--rule-hi)"></path>
+        <rect x="250" y="214" width="240" height="44" rx="2" fill="var(--danger-wash)" stroke="var(--danger)"></rect>
+        <text x="262" y="234" class="svg-label" fill="var(--ink)">Call failed every attempt</text>
+        <text x="262" y="249" class="svg-small" fill="var(--muted)">timeout, provider, schema</text>
+
+        <!-- outcomes -->
+        <path d="M490 42 L536 42" fill="none" stroke="var(--rule-hi)"></path>
+        <rect x="536" y="20" width="200" height="44" rx="2" fill="var(--warn-wash)" stroke="var(--warn)"></rect>
+        <text x="548" y="47" class="svg-mono" fill="var(--ink)">INSUFFICIENT_EVIDENCE</text>
+
+        <path d="M490 128 L536 128" fill="none" stroke="var(--rule-hi)"></path>
+        <rect x="536" y="106" width="200" height="34" rx="2" fill="var(--ok-wash)" stroke="var(--ok)"></rect>
+        <text x="548" y="128" class="svg-mono" fill="var(--ink)">score 0&#8211;4</text>
+
+        <path d="M490 158 L512 158 L512 42 L536 42" fill="none" stroke="var(--rule-hi)" stroke-dasharray="3 2"></path>
+        <text x="500" y="176" class="svg-small" fill="var(--muted)">or the model says it cannot tell</text>
+
+        <path d="M490 236 L536 236" fill="none" stroke="var(--rule-hi)"></path>
+        <rect x="536" y="214" width="200" height="44" rx="2" fill="var(--danger-wash)" stroke="var(--danger)"></rect>
+        <text x="548" y="241" class="svg-mono" fill="var(--ink)">SCORING_FAILED</text>
+
+        <!-- denominator -->
+        <path d="M736 42  L768 42  L768 128" fill="none" stroke="var(--warn)"></path>
+        <path d="M736 236 L768 236 L768 128" fill="none" stroke="var(--danger)"></path>
+        <rect x="768" y="106" width="120" height="44" rx="2" fill="var(--sunk)" stroke="var(--rule-hi)"></rect>
+        <text x="778" y="126" class="svg-label" fill="var(--ink)">Excluded from</text>
+        <text x="778" y="141" class="svg-label" fill="var(--ink)">the denominator</text>
+
+        <text x="768" y="172" class="svg-small" fill="var(--danger)">never 0</text>
+        <text x="768" y="186" class="svg-small" fill="var(--muted)">dimension marked PARTIAL</text>
+      </svg>
+    </div>
+    <figcaption>
+      <b>Three ways a criterion goes unscored, and none of them is a zero.</b> Zero means "we
+      looked and it is not there". Every other outcome says "we could not tell", and the maths
+      treats those as different because they are.
+    </figcaption>
+  </figure>
+
+  <h3>The five scoring calls</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Call</th><th>Produces</th><th class="num">Model</th><th class="num">Temp</th></tr></thead>
+      <tbody>
+        <tr><td><code>scoring.criterion</code></td><td>0&#8211;4 against five verbatim anchors</td><td class="num">sonnet-5</td><td class="num">0.00</td></tr>
+        <tr><td><code>scoring.engineering</code></td><td>Same, but sees measured metrics <em>and</em> source</td><td class="num">sonnet-5</td><td class="num">0.00</td></tr>
+        <tr><td><code>scoring.principles</code></td><td>0&#8211;4 <em>maturity</em> — adoption is a journey, not a switch</td><td class="num">sonnet-5</td><td class="num">0.00</td></tr>
+        <tr><td><code>scoring.standards</code></td><td>COMPLIANT / PARTIAL / NON_COMPLIANT / <b>NOT_APPLICABLE</b></td><td class="num">sonnet-5</td><td class="num">0.00</td></tr>
+        <tr><td><code>scoring.originality</code></td><td>Advisory signal from measured boilerplate and provenance</td><td class="num">sonnet-5</td><td class="num">0.00</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p class="prose">
+    <code>NOT_APPLICABLE</code> earns its place: a dependency-pinning standard has nothing to say
+    about a repository with no manifest, and reaching for <code>NON_COMPLIANT</code> there would
+    mark a team down for the shape of their problem rather than their work.
+  </p>
+
+  <div class="note">
+    <span class="tag">Every cohort is scored twice</span>
+    <p>
+      Two independent runs, then compared — not averaged. Averaging would hide exactly the thing
+      worth knowing. Two flags come out of the comparison: <code>straddles_cut</code> (the runs
+      disagree about whether this submission is in or out) and <code>exceeds_threshold</code>
+      (the composites differ by more than 10 points, wherever the submission sits).
+    </p>
+  </div>
+</section>
+
+<!-- ───────────────────────────────────────────────────────── -->
+<section id="rank">
+  <div class="eyebrow"><span class="n">08</span><span class="k">Arithmetic</span></div>
+  <h2>Aggregate and rank</h2>
+  <p><span class="chip det">Deterministic — pure functions, unit-tested</span></p>
+
+  <p class="prose">
+    From here to the ranked field there is no model at all. Criterion scores roll into dimension
+    scores with unscoreable items excluded from the denominator; challenge fidelity is normalised
+    <em>within its own challenge cohort</em>; the five dimensions combine by the committee's
+    weights; and the field is ranked globally.
+  </p>
+
+  <h3>Why fidelity is normalised within cohort</h3>
+  <p class="prose">
+    A single global ranking is only valid if "challenge fidelity" means the same thing on every
+    track. Two challenges of different difficulty produce different raw distributions, so fidelity
+    is converted to a percentile standing <em>within its own cohort</em> before entering the
+    composite. The raw score is always preserved for appeals.
+  </p>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Method</th><th>When</th></tr></thead>
+      <tbody>
+        <tr><td><code>PERCENTILE</code></td><td>The normal case. Ties count as half, so tied submissions stay equal</td></tr>
+        <tr><td><code>ABSOLUTE_FALLBACK</code></td><td>The cohort is too small for a percentile to mean anything</td></tr>
+        <tr><td><code>DEGENERATE_UNIFORM</code></td><td>Every score is identical — the transform cannot distinguish, and says so rather than inventing an order</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>The thresholds that shape the outcome</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Setting</th><th class="num">Default</th><th>Effect</th></tr></thead>
+      <tbody>
+        <tr><td>Cut line</td><td class="num">6</td><td>Where the field is divided</td></tr>
+        <tr><td>Cut band</td><td class="num">±2</td><td>The zone where every flag must be reviewed by a person</td></tr>
+        <tr><td>Shortlist size</td><td class="num">25</td><td>How many carry forward</td></tr>
+        <tr><td>Minimum cohort</td><td class="num">15</td><td>Below this, normalisation is not trusted</td></tr>
+        <tr><td>Variance threshold</td><td class="num">10</td><td>Composite delta between runs that raises a flag</td></tr>
+        <tr><td>Challenge imbalance</td><td class="num">70%</td><td>Reports a lopsided split rather than correcting it</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="note">
+    <span class="tag">The advisory guard</span>
+    <p>
+      Originality is advisory and carries the lowest weight, and it is structurally prevented from
+      being the sole reason a submission falls below the cut: the cohort is re-ranked with the
+      dimension removed, and any submission whose outcome changes is reported. An advisory signal
+      that could eliminate on its own is not advisory.
+    </p>
+  </div>
+</section>
+
+<!-- ───────────────────────────────────────────────────────── -->
+<section id="review">
+  <div class="eyebrow"><span class="n">09</span><span class="k">Judgement</span></div>
+  <h2>Review and decide</h2>
+  <p><span class="chip human">Person</span></p>
+
+  <p class="prose">
+    The ranked field is presented with the cut band visually distinct, every caveat stated in
+    plain language rather than as a code, and each team's page carrying the evidence behind every
+    number: the criterion scores with their rationale and cited excerpts, the probe result, the
+    provenance observations, and the disagreements between the two runs.
+  </p>
+
+  <h4>Two constraints enforced by the database, not the UI</h4>
+  <ul class="tight prose">
+    <li><strong>A caveat cannot be dismissed without a reason.</strong> A <code>CHECK</code>
+      constraint ties the dismissal to its justification, so the two cannot come apart.</li>
+    <li><strong>A decision cannot be recorded without a reason.</strong> Same shape, same
+      reasoning: the record has to answer "why" three months later.</li>
+  </ul>
+
+  <p class="prose">
+    Finalising the shortlist locks it. And any team's <strong>appeal packet</strong> can be
+    produced in one action: a self-contained document carrying the rubric text they were judged
+    against, every score with its excerpts, the probe outcome, the flags, the decisions and the
+    audit trail — readable without system access, because an appeal answered with a database
+    query is not an answer.
+  </p>
+</section>
+
+<!-- ───────────────────────────────────────────────────────── -->
+<section id="gate">
+  <div class="eyebrow"><span class="n">10</span><span class="k">Fitness</span></div>
+  <h2>The calibration gate</h2>
+
+  <p class="prose">
+    Before the system is allowed to eliminate anyone, it has to be shown fit to. That is what the
+    gate is for, and it is designed so that an uncalibrated system is not used <em>by default</em>.
+  </p>
+
+  <ol class="tight prose">
+    <li>A <strong>golden set</strong> of at least eight repositories spanning clearly strong,
+      middling and clearly weak — including the edge cases that break naive scorers:
+      scaffold-only, excellent code solving the wrong problem, fails to build, very large.</li>
+    <li>Hand-ranked independently by <strong>at least two people, before any machine scoring</strong>.</li>
+    <li>A calibration report: rank correlation, every material disagreement with its evidence,
+      run-to-run variance, and which dimensions disagree most with human judgement.</li>
+    <li><strong>Gate criteria written down before the report is produced.</strong> Otherwise the
+      criteria become a description of whatever the report happened to say.</li>
+    <li>The decision recorded with rationale and actor.</li>
+  </ol>
+
+  <div class="note caution">
+    <span class="tag">If the gate fails</span>
+    <p>
+      The documented fallback is <strong>fully human judging</strong>. The system may then be used
+      for evidence gathering only — not for ranking. The ranking endpoints refuse and quote the
+      fallback plan.
+    </p>
+  </div>
+</section>
+
+<!-- ───────────────────────────────────────────────────────── -->
+<section id="determinism">
+  <div class="eyebrow"><span class="n">11</span><span class="k">Boundaries</span></div>
+  <h2>What is deterministic, and what is not</h2>
+
+  <p class="prose">
+    A fair summary of the architecture: <strong>the model is asked to read and to judge; it is
+    never asked to select, to count, or to compute.</strong> Everything that decides which
+    evidence is seen, how scores combine, and where the line falls is deterministic code.
+  </p>
+
+  <figure>
+    <div class="canvas">
+      <svg viewBox="0 0 960 356" width="100%" height="356" role="img" aria-labelledby="fig5t">
+        <title id="fig5t">Deterministic components on the left, model-driven in the centre, with the gateway as the boundary</title>
+
+        <text x="12" y="20" class="svg-lane" fill="var(--ok)">Deterministic</text>
+        <text x="392" y="20" class="svg-lane" fill="var(--accent)">Model-driven</text>
+        <text x="740" y="20" class="svg-lane" fill="var(--ok)">Deterministic</text>
+
+        <!-- left column -->
+        <g>
+          <rect x="12" y="32" width="196" height="30" rx="2" fill="var(--ok-wash)" stroke="var(--ok)"></rect>
+          <text x="24" y="52" class="svg-label" fill="var(--ink)">Clone &amp; scan</text>
+          <rect x="12" y="68" width="196" height="30" rx="2" fill="var(--ok-wash)" stroke="var(--ok)"></rect>
+          <text x="24" y="88" class="svg-label" fill="var(--ink)">Code metrics</text>
+          <rect x="12" y="104" width="196" height="30" rx="2" fill="var(--ok-wash)" stroke="var(--ok)"></rect>
+          <text x="24" y="124" class="svg-label" fill="var(--ink)">Provenance flags</text>
+          <rect x="12" y="140" width="196" height="30" rx="2" fill="var(--ok-wash)" stroke="var(--ok)"></rect>
+          <text x="24" y="160" class="svg-label" fill="var(--ink)">Build &amp; run probe</text>
+          <rect x="12" y="176" width="196" height="30" rx="2" fill="var(--ok-wash)" stroke="var(--ok)"></rect>
+          <text x="24" y="196" class="svg-label" fill="var(--ink)">Runs grade</text>
+          <rect x="12" y="212" width="196" height="44" rx="2" fill="var(--ok-wash)" stroke="var(--ok)" stroke-width="2"></rect>
+          <text x="24" y="232" class="svg-label" fill="var(--ink)">Evidence selection</text>
+          <text x="24" y="247" class="svg-small" fill="var(--muted)">term ranking, budget</text>
+        </g>
+
+        <!-- membrane -->
+        <rect x="240" y="32" width="112" height="224" rx="2" fill="var(--sunk)" stroke="var(--rule-hi)"></rect>
+        <text x="252" y="52" class="svg-lane" fill="var(--muted)">Gateway</text>
+        <text x="252" y="76" class="svg-small" fill="var(--ink)">registered key</text>
+        <text x="252" y="92" class="svg-small" fill="var(--ink)">stored prompt</text>
+        <text x="252" y="108" class="svg-small" fill="var(--ink)">fenced untrusted</text>
+        <text x="252" y="124" class="svg-small" fill="var(--ink)">schema check</text>
+        <text x="252" y="140" class="svg-small" fill="var(--ink)">classified retry</text>
+        <text x="252" y="156" class="svg-small" fill="var(--ink)">cost accrual</text>
+        <text x="252" y="172" class="svg-small" fill="var(--ink)">audit row</text>
+        <text x="252" y="200" class="svg-small" fill="var(--muted)">every call</text>
+        <text x="252" y="214" class="svg-small" fill="var(--muted)">passes through</text>
+        <text x="252" y="228" class="svg-small" fill="var(--muted)">here &#8212; enforced</text>
+        <text x="252" y="242" class="svg-small" fill="var(--muted)">by a CI gate</text>
+
+        <line x1="208" y1="234" x2="240" y2="234" stroke="var(--ok)" stroke-width="2"></line>
+
+        <!-- centre -->
+        <g>
+          <rect x="384" y="32" width="200" height="30" rx="2" fill="var(--accent-wash)" stroke="var(--accent)"></rect>
+          <text x="396" y="52" class="svg-label" fill="var(--ink)">Criteria drafting</text>
+          <rect x="384" y="68" width="200" height="30" rx="2" fill="var(--accent-wash)" stroke="var(--accent)"></rect>
+          <text x="396" y="88" class="svg-label" fill="var(--ink)">Criterion quality gate</text>
+          <rect x="384" y="104" width="200" height="30" rx="2" fill="var(--accent-wash)" stroke="var(--accent)"></rect>
+          <text x="396" y="124" class="svg-label" fill="var(--ink)">Criterion scoring</text>
+          <rect x="384" y="140" width="200" height="30" rx="2" fill="var(--accent-wash)" stroke="var(--accent)"></rect>
+          <text x="396" y="160" class="svg-label" fill="var(--ink)">Principles &amp; standards</text>
+          <rect x="384" y="176" width="200" height="30" rx="2" fill="var(--accent-wash)" stroke="var(--accent)"></rect>
+          <text x="396" y="196" class="svg-label" fill="var(--ink)">Originality signal</text>
+          <rect x="384" y="212" width="200" height="30" rx="2" fill="var(--accent-wash)" stroke="var(--accent)"></rect>
+          <text x="396" y="232" class="svg-label" fill="var(--ink)">Discovery &#215;7</text>
+        </g>
+
+        <line x1="352" y1="134" x2="384" y2="134" stroke="var(--accent)" stroke-width="2"></line>
+        <line x1="584" y1="134" x2="616" y2="134" stroke="var(--accent)" stroke-width="2"></line>
+
+        <!-- right membrane -->
+        <rect x="616" y="32" width="100" height="224" rx="2" fill="var(--sunk)" stroke="var(--rule-hi)"></rect>
+        <text x="628" y="52" class="svg-lane" fill="var(--muted)">Schema</text>
+        <text x="628" y="76" class="svg-small" fill="var(--ink)">shape enforced</text>
+        <text x="628" y="92" class="svg-small" fill="var(--ink)">caps applied</text>
+        <text x="628" y="108" class="svg-small" fill="var(--ink)">gaps declared</text>
+        <text x="628" y="132" class="svg-small" fill="var(--muted)">nothing</text>
+        <text x="628" y="146" class="svg-small" fill="var(--muted)">unshaped</text>
+        <text x="628" y="160" class="svg-small" fill="var(--muted)">reaches the</text>
+        <text x="628" y="174" class="svg-small" fill="var(--muted)">database</text>
+
+        <line x1="716" y1="134" x2="740" y2="134" stroke="var(--ok)" stroke-width="2"></line>
+
+        <!-- right column -->
+        <g>
+          <rect x="740" y="32" width="208" height="30" rx="2" fill="var(--ok-wash)" stroke="var(--ok)"></rect>
+          <text x="752" y="52" class="svg-label" fill="var(--ink)">Outcome classification</text>
+          <rect x="740" y="68" width="208" height="30" rx="2" fill="var(--ok-wash)" stroke="var(--ok)"></rect>
+          <text x="752" y="88" class="svg-label" fill="var(--ink)">Dimension aggregation</text>
+          <rect x="740" y="104" width="208" height="30" rx="2" fill="var(--ok-wash)" stroke="var(--ok)"></rect>
+          <text x="752" y="124" class="svg-label" fill="var(--ink)">Cohort normalisation</text>
+          <rect x="740" y="140" width="208" height="30" rx="2" fill="var(--ok-wash)" stroke="var(--ok)"></rect>
+          <text x="752" y="160" class="svg-label" fill="var(--ink)">Composite &amp; ranking</text>
+          <rect x="740" y="176" width="208" height="30" rx="2" fill="var(--ok-wash)" stroke="var(--ok)"></rect>
+          <text x="752" y="196" class="svg-label" fill="var(--ink)">Variance comparison</text>
+          <rect x="740" y="212" width="208" height="30" rx="2" fill="var(--ok-wash)" stroke="var(--ok)"></rect>
+          <text x="752" y="232" class="svg-label" fill="var(--ink)">Cut band selection</text>
+        </g>
+
+        <!-- footer band -->
+        <rect x="12" y="280" width="936" height="60" rx="2" fill="var(--surface)" stroke="var(--rule)"></rect>
+        <text x="28" y="302" class="svg-lane" fill="var(--muted)">The shape of it</text>
+        <text x="28" y="322" class="svg-label" fill="var(--ink)">The model reads and judges. It does not choose what it sees, and it does not compute what its answer becomes.</text>
+      </svg>
+    </div>
+    <figcaption>
+      <b>Both boundaries are enforced, not conventional.</b> A CI gate fails the build if any code
+      path reaches a provider without going through the gateway, and no model output reaches the
+      database without satisfying a schema.
+    </figcaption>
+  </figure>
+
+  <h3>Within discovery specifically</h3>
+  <p class="prose">
+    Discovery is often assumed to be "the AI bit", so it is worth being precise about how much of
+    it is not:
+  </p>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Step</th><th>Nature</th></tr></thead>
+      <tbody>
+        <tr><td>Which files each concern is shown</td><td><span class="chip det">Deterministic</span> — term ranking against the concern's evidence spec</td></tr>
+        <tr><td>Budget and file caps</td><td><span class="chip det">Deterministic</span> — configured, applied in code</td></tr>
+        <tr><td>Reading the code and extracting findings</td><td><span class="chip model">Model</span></td></tr>
+        <tr><td>Whether output is accepted</td><td><span class="chip det">Deterministic</span> — Zod schema, per-list caps</td></tr>
+        <tr><td>The four-state outcome per concern</td><td><span class="chip det">Deterministic</span> — from the count and the concern's declared <code>emptyIsMeaningful</code>, not from the model</td></tr>
+        <tr><td>What the tile shows</td><td><span class="chip det">Deterministic</span> — counted from stored rows, not from what the model claimed</td></tr>
+        <tr><td>Supersede vs accumulate</td><td><span class="chip det">Deterministic</span> — enforced by a unique index</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ───────────────────────────────────────────────────────── -->
+<section id="hallucination">
+  <div class="eyebrow"><span class="n">12</span><span class="k">Defences</span></div>
+  <h2>Guarding against the model</h2>
+
+  <p class="prose">
+    Hallucination in this system has a specific and serious shape. It is not a wrong fact in a
+    chat reply — it is a confident sentence that eliminates a team. These are the layers that
+    exist between a model's output and that outcome.
+  </p>
+
+  <div class="controls">
+    <div class="control">
+      <h4>Deterministic evidence selection</h4>
+      <span class="where">packages/scoring/src/relevance.ts</span>
+      <p>The model never chooses the source it is judged against. A model that picked its own
+        evidence could pick evidence <b>supporting the score it already prefers</b>, and two runs
+        would not be comparable.</p>
+    </div>
+    <div class="control">
+      <h4>Temperature zero</h4>
+      <span class="where">llm_call_config.temperature</span>
+      <p>Every judging and extraction call runs at <b>0.00</b>. The one exception is criteria
+        drafting at 0.20, where variety helps and a human reviews the output anyway.</p>
+    </div>
+    <div class="control">
+      <h4>Schema before storage</h4>
+      <span class="where">llmGateway &#183; Zod</span>
+      <p>Output is parsed and validated before anything downstream sees it. An unparseable or
+        mis-shaped response is a <b>failure, not a value</b> — downstream code would otherwise
+        treat fabricated shape as real.</p>
+    </div>
+    <div class="control">
+      <h4>Classified retry</h4>
+      <span class="where">retryStrategy.ts</span>
+      <p>Each failure class gets a <b>distinct</b> plan, never a blind repeat: too-short halves
+        the context, bad structure adds a format reinforcement, a timeout doubles the limit and
+        prefers a faster model, empty content switches model.</p>
+    </div>
+    <div class="control">
+      <h4>Citations are mandatory</h4>
+      <span class="where">scoreSchemas &#183; discoverySchemas</span>
+      <p>Every score and every finding must carry a path and a line range. A finding nobody can
+        locate <b>cannot be disputed</b>, and an undisputable finding is worse than a missing one.</p>
+    </div>
+    <div class="control">
+      <h4>Excluded, never zeroed</h4>
+      <span class="where">packages/scoring/src/aggregate.ts</span>
+      <p>The structural defence against silence becoming a verdict. An unassessed criterion leaves
+        the denominator and marks its dimension <code>PARTIAL</code>; it does not become a zero
+        that looks like every other zero.</p>
+    </div>
+    <div class="control">
+      <h4>Empty is declared, not inferred</h4>
+      <span class="where">discoveryConcerns.ts</span>
+      <p>Each concern states whether zero is a possible answer. An application can integrate with
+        nothing; it cannot store nothing. A zero where zero is implausible is recorded as
+        <b>unreadable</b>, not as a fact about the team.</p>
+    </div>
+    <div class="control">
+      <h4>Concern, not severity</h4>
+      <span class="where">discoverySchemas.ts</span>
+      <p>Security findings have no severity field at all — the vocabulary itself is the guard.
+        Severity is a property of a <b>confirmed</b> vulnerability, and with no CVE database and a
+        budgeted file selection, nothing here is confirmed.</p>
+    </div>
+    <div class="control">
+      <h4>The benign explanation is mandatory</h4>
+      <span class="where">discoverySchemas.ts</span>
+      <p>Every security observation must say what would rule it out, shown next to it. An
+        observation without one <b>reads as an accusation</b> — and accusing a team of a flaw they
+        do not have is the worst outcome available.</p>
+    </div>
+    <div class="control">
+      <h4>Silence is not a conflict</h4>
+      <span class="where">migration 053</span>
+      <p>A documentation claim only conflicts when the findings <b>actively contradict</b> it —
+        never when they are merely silent. Absence of evidence fails the test explicitly, because
+        the scan read only part of the repository.</p>
+    </div>
+    <div class="control">
+      <h4>Prompt injection handling</h4>
+      <span class="where">promptRenderer.ts &#183; P8.4</span>
+      <p>Submission source is fenced with a per-call nonce, structurally neutralised, scanned for
+        injection patterns, and <b>never placed in the system prompt</b>. Anything addressed to the
+        model is reported as <code>injection_noted</code> on the score.</p>
+    </div>
+    <div class="control">
+      <h4>Scored twice, compared</h4>
+      <span class="where">varianceService.ts</span>
+      <p>Two independent runs. Not averaged — averaging hides the disagreement. A submission the
+        system <b>cannot place consistently</b> is one a person should look at, and the flags say
+        which kind of inconsistency it is.</p>
+    </div>
+    <div class="control">
+      <h4>Calibrated against people</h4>
+      <span class="where">E11 golden set</span>
+      <p>Machine ranking is compared against independent hand rankings, with the pass criteria
+        <b>fixed before the report exists</b>. Failure routes to human judging, not to a lowered
+        bar.</p>
+    </div>
+    <div class="control">
+      <h4>A person decides at the line</h4>
+      <span class="where">flag &amp; decision CHECK constraints</span>
+      <p>Everything in the cut band is reviewed by a human, and both dismissing a caveat and
+        recording a decision <b>require a written reason</b> — enforced by the database, so the two
+        cannot come apart.</p>
+    </div>
+    <div class="control">
+      <h4>Prompts are versioned and hashed</h4>
+      <span class="where">llm_prompt_template</span>
+      <p>Content-addressed, one active version per role. A score records which version it ran
+        under, so changing a prompt <b>cannot retroactively re-explain</b> a score already taken.</p>
+    </div>
+    <div class="control">
+      <h4>No ad-hoc prompts exist</h4>
+      <span class="where">CI gate &#183; guard:llm</span>
+      <p>Every model call has a registered key with declared inputs, its own config and its own
+        metrics. There is no endpoint that takes a prompt, and the build <b>fails</b> if a code
+        path reaches a provider directly.</p>
+    </div>
+  </div>
+
+  <div class="note caution">
+    <span class="tag">The one that is missing</span>
+    <p>
+      There is a gap in this list, and it is the most important one: <strong>nothing verifies that
+      a cited file and line actually exist, or that the quoted excerpt matches the source.</strong>
+      A model could cite <code>src/foo.ts:42&#8211;50</code> with an invented excerpt and the
+      system would store, display and defend it. Every claim above about citations being checkable
+      currently depends on a reviewer doing the checking by hand. This is item G1 in the companion
+      gap register, and a deterministic fix is available.
+    </p>
+  </div>
+</section>
+
+<!-- ───────────────────────────────────────────────────────── -->
+<section id="batch">
+  <div class="eyebrow"><span class="n">13</span><span class="k">Operations</span></div>
+  <h2>Running a cohort</h2>
+
+  <p class="prose">
+    On the night, a batch run takes a whole cohort through <strong>scan &#8594; probe &#8594;
+    score</strong>. Four decisions shape how it behaves, and each exists because of how an
+    unattended overnight run actually fails.
+  </p>
+
+  <ul class="tight prose">
+    <li><strong>Stage by stage, not submission by submission.</strong> All fifty are scanned, then
+      all fifty probed, then all fifty scored. Each stage is bound by something different — disk,
+      containers, a provider — so each has its own concurrency limit, and interleaving would make
+      those limits meaningless.</li>
+    <li><strong>A failure is data, not an exception.</strong> Per-submission failures are recorded
+      against the ledger and the run carries on; the summary lists them all.</li>
+    <li><strong>Budget exhaustion pauses, it does not fail.</strong> The work already done is worth
+      keeping, and an operator who raises the ceiling should resume rather than restart. Resume
+      and force are separate actions so redoing completed work cannot happen by accident.</li>
+    <li><strong>Progress is written down, not only published.</strong> A websocket message is gone
+      on reload — which is exactly when somebody checks on an overnight run.</li>
+  </ul>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Control</th><th class="num">Default</th></tr></thead>
+      <tbody>
+        <tr><td>Scan concurrency</td><td class="num">4</td></tr>
+        <tr><td>Probe concurrency</td><td class="num">2</td></tr>
+        <tr><td>Score concurrency</td><td class="num">4</td></tr>
+        <tr><td>LLM concurrency</td><td class="num">8</td></tr>
+        <tr><td>Batch cost ceiling</td><td class="num">$250</td></tr>
+        <tr><td>Per-run cost ceiling</td><td class="num">$50</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="note caution">
+    <span class="tag">Discovery is not in this</span>
+    <p>
+      The batch stages are scan, probe and score. <strong>Discovery must be triggered by hand, per
+      submission.</strong> Since discovery feeds the principles and standards evaluators, a cohort
+      where some submissions were discovered and others were not is scored on unequal evidence —
+      and nothing currently records which is which. See G3 in the gap register.
+    </p>
+  </div>
+</section>
+
+<footer>
+  <p>
+    Compiled from the Crucible source at the state verified by <code>pnpm verify</code> —
+    1,675 tests across 95 files, plus 119 end-to-end journeys. Figures for models, thresholds and
+    limits are read from the live configuration tables rather than from documentation, so they
+    reflect what the system would actually do.
+  </p>
+  <p>
+    The companion document, <strong>the gap register</strong>, catalogues what is missing, broken
+    or unfinished — including the citation-verification gap noted above.
+  </p>
+</footer>
+
+</main>
+</div>

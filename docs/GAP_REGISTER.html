@@ -1,0 +1,1175 @@
+<title>Crucible Gap Register</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Serif:wght@600&display=swap">
+
+<style>
+:root {
+  --ground:  #fbfbfa;
+  --surface: #ffffff;
+  --sunk:    #f4f2ee;
+  --rule:    #e4e2dd;
+  --rule-hi: #d3cfc6;
+  --ink:     #1b1a17;
+  --muted:   #6b6862;
+  --accent:  #8a4b2a;
+  --accent-wash: #f6ece5;
+  --ok:      #2f6a3f;
+  --ok-wash: #ecf3ed;
+  --warn:    #8a6a1f;
+  --warn-wash: #f8f2e0;
+  --danger:  #9c3025;
+  --danger-wash: #faecea;
+
+  --serif: "IBM Plex Serif", Georgia, serif;
+  --sans:  "IBM Plex Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono:  "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --measure: 70ch;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ground:#161512; --surface:#1f1d19; --sunk:#1a1815; --rule:#34312a; --rule-hi:#4a4539;
+    --ink:#ece8e0; --muted:#9c968a; --accent:#cf8d61; --accent-wash:#2a211a;
+    --ok:#7aad86; --ok-wash:#1c241d; --warn:#cfae5e; --warn-wash:#262115;
+    --danger:#d97a6c; --danger-wash:#2a1c19;
+  }
+}
+:root[data-theme="dark"] {
+  --ground:#161512; --surface:#1f1d19; --sunk:#1a1815; --rule:#34312a; --rule-hi:#4a4539;
+  --ink:#ece8e0; --muted:#9c968a; --accent:#cf8d61; --accent-wash:#2a211a;
+  --ok:#7aad86; --ok-wash:#1c241d; --warn:#cfae5e; --warn-wash:#262115;
+  --danger:#d97a6c; --danger-wash:#2a1c19;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--ground);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 16px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+.wrap { max-width: 1060px; margin: 0 auto; padding-inline: 20px; padding-block: 32px 96px; }
+@media (min-width: 900px) { .wrap { padding-inline: 32px; padding-block: 56px 120px; } }
+
+p, ul, ol { margin: 0 0 16px; max-width: var(--measure); }
+a { color: var(--accent); }
+code { font-family: var(--mono); font-size: 0.87em; background: var(--sunk); border: 1px solid var(--rule); border-radius: 3px; padding: 0.5px 4px; word-break: break-word; }
+strong { font-weight: 600; }
+
+h1 {
+  font-family: var(--serif); font-weight: 600;
+  font-size: clamp(32px, 5.6vw, 46px); line-height: 1.1;
+  letter-spacing: -0.02em; text-wrap: balance; margin: 0 0 14px;
+}
+h2 {
+  font-family: var(--serif); font-weight: 600;
+  font-size: clamp(21px, 3vw, 26px); line-height: 1.22;
+  letter-spacing: -0.01em; margin: 0 0 6px; text-wrap: balance;
+}
+
+.stamp {
+  display: inline-flex; align-items: center; gap: 9px;
+  font-family: var(--mono); font-size: 11.5px; letter-spacing: 0.06em;
+  text-transform: uppercase; color: var(--danger);
+  border: 1px solid var(--danger); border-radius: 2px;
+  padding: 4px 9px; margin-bottom: 20px;
+}
+.stamp .dot { width: 5px; height: 5px; border-radius: 50%; background: var(--danger); }
+
+.lede { font-size: 18px; line-height: 1.55; color: var(--muted); }
+
+/* ── Severity summary ──────────────────────────────────────── */
+
+.tally {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(128px, 1fr));
+  gap: 1px; background: var(--rule); border: 1px solid var(--rule);
+  margin: 32px 0 8px;
+}
+.tally > div { background: var(--surface); padding: 14px 15px; }
+.tally .n {
+  font-family: var(--mono); font-size: 27px; font-weight: 500;
+  font-variant-numeric: tabular-nums; line-height: 1.1; display: block;
+}
+.tally .l {
+  font-size: 10.5px; font-weight: 600; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--muted); margin-top: 3px; display: block;
+}
+.tally .critical .n { color: var(--danger); }
+.tally .high .n     { color: var(--warn); }
+.tally .medium .n   { color: var(--accent); }
+.tally .low .n      { color: var(--muted); }
+
+/* ── Distribution bar ──────────────────────────────────────── */
+
+.spread { margin: 26px 0 34px; }
+.spread h3 {
+  font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--muted); margin: 0 0 10px;
+}
+.bars { display: flex; flex-direction: column; gap: 7px; }
+.bar-row { display: grid; grid-template-columns: 180px 1fr 34px; align-items: center; gap: 12px; font-size: 13.5px; }
+@media (max-width: 620px) { .bar-row { grid-template-columns: 116px 1fr 30px; font-size: 12.5px; } }
+.bar-row .area { color: var(--muted); }
+.bar-track { height: 16px; background: var(--sunk); border: 1px solid var(--rule); display: flex; }
+.bar-seg { height: 100%; }
+.bar-seg.c { background: var(--danger); }
+.bar-seg.h { background: var(--warn); }
+.bar-seg.m { background: var(--accent); }
+.bar-seg.l { background: var(--rule-hi); }
+.bar-row .count { font-family: var(--mono); font-size: 12px; color: var(--muted); text-align: right; font-variant-numeric: tabular-nums; }
+
+.key { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 12px; font-size: 12px; color: var(--muted); }
+.key span { display: inline-flex; align-items: center; gap: 6px; }
+.key i { width: 11px; height: 11px; display: inline-block; }
+
+/* ── Entries ───────────────────────────────────────────────── */
+
+.group { margin-top: 44px; }
+.group > h2 { display: flex; align-items: baseline; gap: 12px; }
+.group > p { margin-bottom: 22px; }
+
+.sev-mark {
+  font-family: var(--mono); font-size: 11px; font-weight: 500;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  border: 1px solid; border-radius: 2px; padding: 2px 8px; white-space: nowrap;
+}
+.sev-critical { color: var(--danger); border-color: var(--danger); background: var(--danger-wash); }
+.sev-high     { color: var(--warn);   border-color: var(--warn);   background: var(--warn-wash); }
+.sev-medium   { color: var(--accent); border-color: var(--accent); background: var(--accent-wash); }
+.sev-low      { color: var(--muted);  border-color: var(--rule-hi); background: var(--sunk); }
+
+.entry { border: 1px solid var(--rule); background: var(--surface); margin-bottom: 14px; }
+.entry.critical { border-left: 4px solid var(--danger); }
+.entry.high     { border-left: 4px solid var(--warn); }
+.entry.medium   { border-left: 4px solid var(--accent); }
+.entry.low      { border-left: 4px solid var(--rule-hi); }
+
+.entry > header {
+  display: flex; flex-wrap: wrap; align-items: baseline; gap: 10px;
+  padding: 12px 16px; border-bottom: 1px solid var(--rule); background: var(--sunk);
+}
+.entry > header .id {
+  font-family: var(--mono); font-size: 12.5px; font-weight: 500; color: var(--accent);
+}
+.entry > header h3 { margin: 0; font-size: 15.5px; font-weight: 600; line-height: 1.3; flex: 1 1 260px; }
+.entry > header .area {
+  font-size: 10.5px; font-weight: 600; letter-spacing: 0.09em;
+  text-transform: uppercase; color: var(--muted);
+}
+
+.entry > .body { padding: 14px 16px; }
+.entry > .body > :last-child { margin-bottom: 0; }
+
+.facet { margin-bottom: 13px; }
+.facet:last-child { margin-bottom: 0; }
+.facet dt {
+  font-size: 10.5px; font-weight: 600; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--muted); margin-bottom: 3px;
+}
+.facet dd { margin: 0; font-size: 14.5px; line-height: 1.55; max-width: var(--measure); }
+.facet dd > :last-child { margin-bottom: 0; }
+.facet.impact dd { color: var(--ink); }
+.facet.fix dd { color: var(--muted); }
+.facet.fix dd b { color: var(--ink); font-weight: 600; }
+
+.where { font-family: var(--mono); font-size: 11.5px; color: var(--muted); word-break: break-word; }
+
+.verified {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 11px; color: var(--ok); font-weight: 600;
+  letter-spacing: 0.04em; text-transform: uppercase;
+}
+.verified::before { content: ""; width: 5px; height: 5px; border-radius: 50%; background: var(--ok); }
+
+.note {
+  border-left: 3px solid var(--accent); background: var(--accent-wash);
+  padding: 13px 16px; margin: 22px 0; max-width: var(--measure);
+}
+.note > :last-child { margin-bottom: 0; }
+.note .tag {
+  display: block; font-size: 10.5px; font-weight: 600; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--accent); margin-bottom: 5px;
+}
+
+.table-wrap { overflow-x: auto; margin: 18px 0 24px; border: 1px solid var(--rule); background: var(--surface); }
+table { border-collapse: collapse; width: 100%; min-width: 540px; font-size: 14px; }
+th, td { text-align: left; padding: 9px 14px; border-bottom: 1px solid var(--rule); vertical-align: top; }
+thead th {
+  font-size: 10.5px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--muted); background: var(--sunk); white-space: nowrap;
+}
+tbody tr:last-child td { border-bottom: none; }
+td.mono { font-family: var(--mono); font-size: 12.5px; white-space: nowrap; }
+
+/* A closed item stays in the register rather than vanishing: "somebody fixed this" has to be
+   distinguishable from "this was never here", which is the same rule the product itself keeps
+   for dismissed flags and resolved provenance. */
+.closed {
+  display: inline-block; font-size: 10.5px; font-weight: 600; letter-spacing: 0.06em;
+  text-transform: uppercase; color: var(--ok, #2f6f4f); border: 1px solid currentColor;
+  border-radius: 3px; padding: 2px 7px; margin-left: 8px; white-space: nowrap;
+}
+.entry.done > header h3 { text-decoration: line-through; text-decoration-thickness: 1px; }
+.entry.done { opacity: 0.92; }
+td.done { color: var(--ok, #2f6f4f); font-weight: 600; white-space: nowrap; }
+
+footer {
+  border-top: 1px solid var(--rule); margin-top: 52px; padding-top: 20px;
+  font-size: 13px; color: var(--muted); max-width: var(--measure);
+}
+</style>
+
+<div class="wrap">
+
+<header>
+  <span class="stamp"><span class="dot"></span>Gap register</span>
+  <h1>What Crucible cannot yet do</h1>
+  <p class="lede">
+    Seventeen items, found by reading the implementation against its own stated commitments and
+    verified against live source or the running system. <strong>All seventeen are now closed</strong>
+    by the seven remediation epics E13&#8202;–&#8202;E19. One item remains open, and it is a
+    <em>decision</em> rather than a defect, and it has since been taken: <strong>G18 is closed by
+    decision</strong>, recorded in ADR 0004.
+  </p>
+
+  <p class="lede">
+    Nothing here has been deleted. A struck-through entry says <em>somebody fixed this</em>, which
+    has to stay distinguishable from <em>this was never here</em> — the same rule the product keeps
+    for dismissed flags and resolved provenance. Each closed item names the epic that closed it;
+    <a href="BUILD_LOG.md">the build log</a> records what broke during the work.
+  </p>
+
+  <div class="tally">
+    <div class="critical"><span class="n">1</span><span class="l">Critical · closed</span></div>
+    <div class="high"><span class="n">4</span><span class="l">High · closed</span></div>
+    <div class="medium"><span class="n">7</span><span class="l">Medium · closed</span></div>
+    <div class="low"><span class="n">5</span><span class="l">Low · closed</span></div>
+  </div>
+
+  <div class="spread">
+    <h3>Where they cluster</h3>
+    <div class="bars">
+      <div class="bar-row">
+        <span class="area">Evidence integrity</span>
+        <span class="bar-track"><span class="bar-seg c" style="width:100%"></span></span>
+        <span class="count">1</span>
+      </div>
+      <div class="bar-row">
+        <span class="area">Discovery</span>
+        <span class="bar-track"><span class="bar-seg h" style="width:33%"></span><span class="bar-seg m" style="width:50%"></span><span class="bar-seg l" style="width:17%"></span></span>
+        <span class="count">6</span>
+      </div>
+      <div class="bar-row">
+        <span class="area">Run comparability</span>
+        <span class="bar-track"><span class="bar-seg h" style="width:100%"></span></span>
+        <span class="count">1</span>
+      </div>
+      <div class="bar-row">
+        <span class="area">Team identity</span>
+        <span class="bar-track"><span class="bar-seg h" style="width:50%"></span><span class="bar-seg l" style="width:50%"></span></span>
+        <span class="count">2</span>
+      </div>
+      <div class="bar-row">
+        <span class="area">Missing interfaces</span>
+        <span class="bar-track"><span class="bar-seg m" style="width:60%"></span><span class="bar-seg l" style="width:40%"></span></span>
+        <span class="count">5</span>
+      </div>
+      <div class="bar-row">
+        <span class="area">Configuration</span>
+        <span class="bar-track"><span class="bar-seg m" style="width:50%"></span><span class="bar-seg l" style="width:50%"></span></span>
+        <span class="count">2</span>
+      </div>
+    </div>
+    <div class="key">
+      <span><i style="background:var(--danger)"></i>Critical</span>
+      <span><i style="background:var(--warn)"></i>High</span>
+      <span><i style="background:var(--accent)"></i>Medium</span>
+      <span><i style="background:var(--rule-hi)"></i>Low</span>
+    </div>
+  </div>
+
+  <div class="note">
+    <span class="tag">How to read the severities</span>
+    <p>
+      <strong>Critical</strong> means the system could produce a wrong outcome and defend it.
+      <strong>High</strong> means a real risk to fairness or to the night running at all.
+      <strong>Medium</strong> means friction or a capability that exists in the API but not where
+      anyone can reach it. <strong>Low</strong> is polish and configuration.
+    </p>
+  </div>
+</header>
+
+<!-- ══════════════════════════════════════════════════════════ -->
+<div class="group">
+  <h2>Critical <span class="sev-mark sev-critical">1 closed</span></h2>
+  <p>The one item here undermines the claim the rest of the architecture is built on.</p>
+
+  <article class="entry critical done">
+    <header>
+      <span class="id">G1</span>
+      <h3>Cited evidence is never verified against the scanned source</h3>
+      <span class="area">Evidence integrity</span>
+      <span class="closed">Closed — E13</span>
+    </header>
+    <div class="body">
+      <dl>
+        <div class="facet">
+          <dt>What is true today</dt>
+          <dd>
+            <p>
+              Every score and every discovery finding carries a <code>path</code>, a line range and
+              an <code>excerpt</code>. The schema enforces that those fields are <em>present</em>
+              and well-formed. <strong>Nothing checks that they are real.</strong> A search of the
+              scoring and LLM modules finds no code that opens the scanned file, confirms the path
+              exists, checks the line range is within bounds, or compares the quoted excerpt
+              against the source.
+            </p>
+          </dd>
+        </div>
+        <div class="facet impact">
+          <dt>Why it matters</dt>
+          <dd>
+            A model can cite <code>src/auth/session.ts:42&#8211;58</code> with a plausible,
+            invented excerpt, and Crucible will store it, render it in the reviewer's page, and
+            reproduce it verbatim in the team's appeal packet. The system's entire defensibility
+            argument — <em>"a disputed judgement can be checked rather than debated"</em> — rests
+            on a reviewer manually opening the file. In the cut band, under time pressure, nobody
+            will. This is the one failure mode where Crucible would be confidently,
+            unfalsifiably wrong.
+          </dd>
+        </div>
+        <div class="facet fix">
+          <dt>The fix is deterministic and cheap</dt>
+          <dd>
+            <p>
+              The scan is already persisted in full. After schema validation and before storage:
+              <b>confirm the path is in the scan</b>; <b>confirm the line range is within that
+              file's length</b>; <b>confirm a normalised form of the excerpt appears at or near
+              those lines</b>. Three outcomes — verified, unverifiable (the file was outside the
+              scan budget, which is honest and should be labelled), or contradicted.
+            </p>
+            <p>
+              A contradicted citation should not be silently dropped. It is a signal about that
+              response, and the honest handling is to treat the score as
+              <code>SCORING_FAILED</code> and retry — the retry ladder already exists and already
+              has a classification for exactly this shape of problem.
+            </p>
+          </dd>
+        </div>
+        <div class="facet">
+          <dt>Verified</dt>
+          <dd><span class="verified">No verification code exists in scoring, llm or discovery modules</span></dd>
+        </div>
+      </dl>
+    </div>
+  </article>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════ -->
+<div class="group">
+  <h2>High <span class="sev-mark sev-high">4 closed</span></h2>
+  <p>Each of these is a live risk to fairness, comparability, or the event running at all.</p>
+
+  <article class="entry high done">
+    <header>
+      <span class="id">G2</span>
+      <h3>Runs record a pin that is never honoured, and that omits everything which decides the outcome</h3>
+      <span class="area">Run comparability</span>
+      <span class="closed">Closed — E14</span>
+    </header>
+    <div class="body">
+      <dl>
+        <div class="facet">
+          <dt>What is true today</dt>
+          <dd>
+            <p>
+              <code>run.pinned_config</code> exists, and its comment states the commitment
+              directly: <em>&#8220;P4.4: the model is pinned per run; a config change must not
+              affect an in-flight run.&#8221;</em> The batch orchestrator populates it. Two things
+              are wrong with that.
+            </p>
+            <p>
+              <strong>It pins the wrong things.</strong> The snapshot holds concurrency limits,
+              <code>batch.cost_ceiling_usd</code>, <code>batch.projection_after</code> and
+              <code>llm.concurrency</code>. It contains <em>no feature flags at all</em> — including
+              <code>feature.discovery.enabled</code> — and none of the parameters that determine
+              an outcome: context budgets, the cut line, the cut band, the variance threshold,
+              minimum cohort size, or which model each call key uses.
+            </p>
+            <p>
+              <strong>And it is written but never read.</strong> No code reads
+              <code>pinnedConfig</code> back. The scoring path calls <code>getNumber(...)</code>
+              live, so a configuration change <em>does</em> affect an in-flight run — exactly what
+              the column was created to prevent. The pin is a record of intent, not a mechanism.
+            </p>
+            <p>
+              <code>score_run</code> — the row the variance comparison actually joins on — pins
+              <code>rubric_versions</code> and a single <code>model</code> string. Both correct,
+              and both far narrower than what shapes a composite.
+            </p>
+          </dd>
+        </div>
+        <div class="facet impact">
+          <dt>Why it matters</dt>
+          <dd>
+            The whole value of scoring twice is that the two runs are comparable. Change the cut
+            line, a context budget, or the discovery flag between run 1 and run 2, and the
+            variance flags measure a configuration change while reading as model instability.
+            The calibration gate has the same exposure: a gate passed under one configuration
+            silently vouches for a run under another. And because the pin is not enforced, a
+            change made <em>during</em> an overnight run reshapes the second half of it with
+            nothing recording that the halves are not alike.
+          </dd>
+        </div>
+        <div class="facet fix">
+          <dt>Shape of the fix</dt>
+          <dd>
+            <p>Three parts, and the second is the one that matters:</p>
+            <ul>
+              <li><b>Widen the snapshot</b> to every flag and every outcome-determining setting,
+                derived from the config declaration rather than hand-listed — a hand-listed set
+                silently stops covering settings added later.</li>
+              <li><b>Honour it.</b> Resolve configuration through the run's snapshot for the life
+                of the run, the way the correlation id is already carried ambiently, so that
+                &#8220;pinned&#8221; is enforced rather than asserted.</li>
+              <li><b>Report drift</b> when two compared runs were not executed alike, beside the
+                variance flags and beside the gate verdict.</li>
+            </ul>
+          </dd>
+        </div>
+        <div class="facet">
+          <dt>Verified</dt>
+          <dd><span class="verified">pinned_config is written in batchOrchestrator and read nowhere; the snapshot lists four keys and no flags</span></dd>
+        </div>
+      </dl>
+    </div>
+  </article>
+
+  <article class="entry high done">
+    <header>
+      <span class="id">G3</span>
+      <h3>Discovery is outside the batch, so a cohort is scored on unequal evidence</h3>
+      <span class="area">Discovery</span>
+      <span class="closed">Closed — E15</span>
+    </header>
+    <div class="body">
+      <dl>
+        <div class="facet">
+          <dt>What is true today</dt>
+          <dd>
+            The batch stages are <code>scan</code>, <code>probe</code>, <code>score</code>.
+            Discovery appears nowhere in the orchestrator. It is triggered one submission at a
+            time through an organiser-only endpoint.
+          </dd>
+        </div>
+        <div class="facet impact">
+          <dt>Why it matters</dt>
+          <dd>
+            Discovery feeds the principles and standards evaluators. A fifty-team cohort therefore
+            needs fifty manual triggers, and any that are missed produce submissions scored with
+            <em>less context</em> than their competitors — on the same rubric, in the same ranking,
+            with nothing on screen saying so. The per-submission guard works correctly (an
+            undiscovered submission gets an explicit "none was run" rather than a blank), but there
+            is no cohort-level guard and no report of coverage.
+          </dd>
+        </div>
+        <div class="facet fix">
+          <dt>Shape of the fix</dt>
+          <dd>
+            Two parts, and the second matters more than the first. <b>Add discovery as an optional
+            batch stage</b> with its own concurrency limit and its own cost ceiling. Then
+            <b>report discovery coverage per cohort</b> and refuse — or loudly warn — when a
+            ranking is computed over a partially discovered field.
+          </dd>
+        </div>
+        <div class="facet">
+          <dt>Verified</dt>
+          <dd><span class="verified">batchOrchestrator contains no reference to discovery</span></dd>
+        </div>
+      </dl>
+    </div>
+  </article>
+
+  <article class="entry high done">
+    <header>
+      <span class="id">G4</span>
+      <h3>There is no team entity — a team is a string on a submission</h3>
+      <span class="area">Team identity</span>
+      <span class="closed">Closed — E17</span>
+    </header>
+    <div class="body">
+      <dl>
+        <div class="facet">
+          <dt>What is true today</dt>
+          <dd>
+            No <code>team</code> table exists. Team identity is <code>team_name TEXT</code> on the
+            submission, with a uniqueness index on <code>(lower(team_name), challenge_id)</code>
+            among current submissions. There is no registration step, no roster, and no assignment
+            of teams to challenges — a team joins by submitting.
+          </dd>
+        </div>
+        <div class="facet impact">
+          <dt>Why it matters</dt>
+          <dd>
+            <p>Identity by case-normalised string has consequences that only appear under pressure:</p>
+            <ul>
+              <li>"Night Shift" and "The Night Shift" are two different teams, and neither knows it.</li>
+              <li>A team that renames between versions creates a second lineage rather than a new version of the first.</li>
+              <li>A team entering two challenges cannot be recognised as the same team.</li>
+              <li>Tokens are labelled with a team name that is never reconciled against the name typed into the form, so the audit trail cannot answer "did this team submit with their own token?"</li>
+            </ul>
+          </dd>
+        </div>
+        <div class="facet fix">
+          <dt>Shape of the fix</dt>
+          <dd>
+            This is a deliberate simplification for a one-evening event, and it may be the right
+            call. The proportionate step is not a full roster: <b>bind the submission token to a
+            team record</b> and take the team's identity from the token rather than from typed
+            text. That closes the reconciliation gap and the rename problem together, and the
+            token already exists.
+          </dd>
+        </div>
+        <div class="facet">
+          <dt>Verified</dt>
+          <dd><span class="verified">No CREATE TABLE for team in any migration; identity is the text column</span></dd>
+        </div>
+      </dl>
+    </div>
+  </article>
+
+  <article class="entry high done">
+    <header>
+      <span class="id">G5</span>
+      <h3>Discovery is absent from every surface where decisions are actually made</h3>
+      <span class="area">Discovery</span>
+      <span class="closed">Closed — E16</span>
+    </header>
+    <div class="body">
+      <dl>
+        <div class="facet">
+          <dt>What is true today</dt>
+          <dd>
+            Discovery is reachable from one place: a link on the individual team review page. It
+            does <strong>not</strong> appear in the appeal packet, the readiness report, the ranked
+            field, or the submission score page.
+          </dd>
+        </div>
+        <div class="facet impact">
+          <dt>Why it matters</dt>
+          <dd>
+            The appeal packet is the strongest commitment the system makes — a self-contained
+            document answering "why did we not present?" without system access. If discovery
+            informed the principles and standards scores, then <strong>the packet omits part of the
+            basis for the scores it reports</strong>. A team disputing a principles score cannot
+            see the map the evaluator was given. That is a governance gap, not a UI one.
+          </dd>
+        </div>
+        <div class="facet fix">
+          <dt>Shape of the fix</dt>
+          <dd>
+            <b>Add the discovery digest to the appeal packet</b> wherever one informed the run,
+            labelled as context rather than as evidence. Add discovery coverage to the readiness
+            report as an eighth check. Both are additive.
+          </dd>
+        </div>
+        <div class="facet">
+          <dt>Verified</dt>
+          <dd><span class="verified">appealPacket imports no discovery module; readinessReport has no discovery check</span></dd>
+        </div>
+      </dl>
+    </div>
+  </article>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════ -->
+<div class="group">
+  <h2>Medium <span class="sev-mark sev-medium">7 closed</span></h2>
+  <p>
+    Capability that exists in the API but nowhere a person can reach it, plus operational
+    weaknesses that will be felt at fifty-team scale.
+  </p>
+
+  <article class="entry medium done">
+    <header>
+      <span class="id">G6</span>
+      <h3><code>reviewer_model</code> is named for a review pass that does not exist</h3>
+      <span class="area">LLM gateway</span>
+      <span class="closed">Closed — E14</span>
+    </header>
+    <div class="body">
+      <dl>
+        <div class="facet">
+          <dt>What is true today</dt>
+          <dd>
+            <code>llm.reviewer_model</code> is configured as <code>claude-opus-5</code> and every
+            call config carries a <code>reviewer_model</code> column. Its only use in the codebase
+            is as the <em>fallback model</em> when the retry ladder decides to switch models. There
+            is no critic pass, no second-opinion pass, and no adversarial check anywhere in the
+            system.
+          </dd>
+        </div>
+        <div class="facet impact">
+          <dt>Why it matters</dt>
+          <dd>
+            The name implies a control that is not there. Anyone auditing this system — including
+            a future maintainer — would reasonably read the schema and conclude that scores are
+            reviewed by a stronger model. They are not.
+          </dd>
+        </div>
+        <div class="facet fix">
+          <dt>Shape of the fix</dt>
+          <dd>
+            Cheapest honest fix: <b>rename it <code>fallback_model</code></b>, which is what it is.
+            The larger question — whether a genuine adversarial review pass on cut-band scores
+            would be worth its cost — is a real design decision, and the current naming obscures
+            that it has not been made.
+          </dd>
+        </div>
+        <div class="facet">
+          <dt>Verified</dt>
+          <dd><span class="verified">Sole use: <code>if (switchModel &amp;&amp; resolved.config.reviewerModel) return ...</code></span></dd>
+        </div>
+      </dl>
+    </div>
+  </article>
+
+  <article class="entry medium done">
+    <header>
+      <span class="id">G7</span>
+      <h3>Discovery runs synchronously inside one HTTP request</h3>
+      <span class="area">Discovery</span>
+      <span class="closed">Closed — E15</span>
+    </header>
+    <div class="body">
+      <dl>
+        <div class="facet">
+          <dt>What is true today</dt>
+          <dd>
+            Seven sequential model calls, each with a 180-second timeout, inside a single request.
+            The worst case is over twenty minutes on one connection. There is no job record, no
+            progress, no resumability, and a dropped connection loses the visibility even though
+            the work continues.
+          </dd>
+        </div>
+        <div class="facet impact">
+          <dt>Why it matters</dt>
+          <dd>
+            The platform request timeout is 30 seconds. Any proxy or load balancer in front of the
+            API will sever the connection long before discovery finishes. The run itself completes
+            and persists — so the data is safe — but the operator sees a failure and has no way to
+            tell a hung run from a finished one.
+          </dd>
+        </div>
+        <div class="facet fix">
+          <dt>Shape of the fix</dt>
+          <dd>
+            The run ledger and the websocket progress hub both already exist and are used by the
+            batch orchestrator. <b>Open a ledger run, return immediately, publish per-concern
+            progress</b>, exactly as batch does. This is the pattern the reference implementation
+            reached for as well, with a durable queue behind it.
+          </dd>
+        </div>
+      </dl>
+    </div>
+  </article>
+
+  <article class="entry medium done">
+    <header>
+      <span class="id">G8</span>
+      <h3>Re-running discovery cannot say what changed</h3>
+      <span class="area">Discovery</span>
+      <span class="closed">Closed — E16</span>
+    </header>
+    <div class="body">
+      <dl>
+        <div class="facet">
+          <dt>What is true today</dt>
+          <dd>
+            A second discovery supersedes the first wholesale. The superseded run keeps its
+            findings — correctly, as evidence — but nothing reconciles the two sets.
+          </dd>
+        </div>
+        <div class="facet impact">
+          <dt>Why it matters</dt>
+          <dd>
+            For a one-evening hackathon this is nearly harmless: a submission is discovered once.
+            It matters the moment Crucible is used across rounds, or for a team that resubmits
+            after fixing a security observation — the reviewer cannot see that the observation is
+            gone, only that the new run does not list it, which is a different and weaker
+            statement.
+          </dd>
+        </div>
+        <div class="facet fix">
+          <dt>Shape of the fix</dt>
+          <dd>
+            The reference implementation classifies each incoming finding as
+            <code>NEW</code>/<code>UPDATE</code>/<code>DUPLICATE</code> against stored state. A
+            cheaper deterministic version is available here: <b>match on
+            <code>(kind, label, path)</code></b> and report added, unchanged and disappeared. No
+            model call needed.
+          </dd>
+        </div>
+      </dl>
+    </div>
+  </article>
+
+  <article class="entry medium done">
+    <header>
+      <span class="id">G9</span>
+      <h3>Criteria cannot be edited in the application</h3>
+      <span class="area">Missing interfaces</span>
+      <span class="closed">Closed — E18</span>
+    </header>
+    <div class="body">
+      <dl>
+        <div class="facet">
+          <dt>What is true today</dt>
+          <dd>
+            The API supports creating, patching and deleting criteria, and the web client exports
+            <code>editCriterion</code>. No component calls it. <code>CriterionCard</code> is
+            read-only.
+          </dd>
+        </div>
+        <div class="facet impact">
+          <dt>Why it matters</dt>
+          <dd>
+            The quality gate flags criteria as <code>NEEDS_REWRITE</code> — deliberately, rather
+            than dropping them — and shows the reviewer exactly why. <strong>And then offers no way
+            to rewrite them.</strong> A committee can re-weight but cannot reword an anchor, fix an
+            evidence specification, or resolve a flagged criterion without falling back to the API.
+          </dd>
+        </div>
+        <div class="facet fix">
+          <dt>Shape of the fix</dt>
+          <dd>
+            An editable <code>CriterionCard</code> on a draft rubric, with the same anchor-distinctness
+            and evidence-specification checks the principles authoring form already applies.
+          </dd>
+        </div>
+        <div class="facet">
+          <dt>Verified</dt>
+          <dd><span class="verified"><code>editCriterion</code> is exported and has no callers in the UI</span></dd>
+        </div>
+      </dl>
+    </div>
+  </article>
+
+  <article class="entry medium done">
+    <header>
+      <span class="id">G10</span>
+      <h3>The calibration workflow has no interface — only its verdict does</h3>
+      <span class="area">Missing interfaces</span>
+      <span class="closed">Closed — E18</span>
+    </header>
+    <div class="body">
+      <dl>
+        <div class="facet">
+          <dt>What is true today</dt>
+          <dd>
+            The web reads the gate verdict and displays it. Building a golden set, recording the
+            two independent hand rankings, running the calibration report and recording the go/no-go
+            decision are all API-only.
+          </dd>
+        </div>
+        <div class="facet impact">
+          <dt>Why it matters</dt>
+          <dd>
+            This is the most consequential decision in the system — whether it is fit to eliminate
+            anyone — and it is the least accessible. A gate that can only be exercised through curl
+            is a gate that gets skipped when the evening is tight, and skipping it is exactly what
+            the design was built to prevent.
+          </dd>
+        </div>
+        <div class="facet fix">
+          <dt>Shape of the fix</dt>
+          <dd>
+            A calibration page: assemble the golden set, capture each ranker's order separately,
+            run the report, and record the decision with its rationale. The ordering constraint —
+            hand rankings before machine scoring — should be enforced by the UI, not just
+            documented.
+          </dd>
+        </div>
+      </dl>
+    </div>
+  </article>
+
+  <article class="entry medium done">
+    <header>
+      <span class="id">G11</span>
+      <h3>Discovery spend is outside every cost ceiling</h3>
+      <span class="area">Discovery</span>
+      <span class="closed">Closed — E15</span>
+    </header>
+    <div class="body">
+      <dl>
+        <div class="facet">
+          <dt>What is true today</dt>
+          <dd>
+            Cost accrues per call and is attributed to the submission, correctly. But the batch
+            ceiling ($250) only applies to a batch run, and discovery is not in the batch. The
+            per-run ceiling ($50) applies to a ledger run, and manual discovery opens none.
+          </dd>
+        </div>
+        <div class="facet impact">
+          <dt>Why it matters</dt>
+          <dd>
+            Seven calls per submission across fifty teams is unbudgeted and unbounded. Nothing
+            stops it, and nothing warns before it happens.
+          </dd>
+        </div>
+        <div class="facet fix">
+          <dt>Shape of the fix</dt>
+          <dd>
+            Falls out of G3 for free: putting discovery in the batch puts it under the batch
+            ceiling. Failing that, a <code>discovery.cost_ceiling_usd</code> and a projection
+            before a bulk trigger.
+          </dd>
+        </div>
+      </dl>
+    </div>
+  </article>
+
+  <article class="entry medium done">
+    <header>
+      <span class="id">G12</span>
+      <h3>A reviewer cannot dismiss or annotate a discovery finding</h3>
+      <span class="area">Discovery</span>
+      <span class="closed">Closed — E16</span>
+    </header>
+    <div class="body">
+      <dl>
+        <div class="facet">
+          <dt>What is true today</dt>
+          <dd>
+            Every security observation ships with a <code>benign_explanation</code> naming what a
+            reviewer should check to rule it out. When the reviewer checks it and it <em>is</em>
+            benign, there is nowhere to record that.
+          </dd>
+        </div>
+        <div class="facet impact">
+          <dt>Why it matters</dt>
+          <dd>
+            The observation stays on the page, the tile stays amber, and the next reviewer repeats
+            the work. Worse, a resolved observation and an unexamined one look identical — which is
+            the same category of confusion the tile design works hard to avoid elsewhere.
+          </dd>
+        </div>
+        <div class="facet fix">
+          <dt>Shape of the fix</dt>
+          <dd>
+            The review module's flag-dismissal pattern applies directly, including its
+            <code>CHECK</code> constraint tying a dismissal to its reason. Dismissal should
+            supersede rather than delete, for the same reason discovery runs do.
+          </dd>
+        </div>
+      </dl>
+    </div>
+  </article>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════ -->
+<div class="group">
+  <h2>Low <span class="sev-mark sev-low">5 closed</span></h2>
+  <p>Configuration that ships unset, and gaps a team or organiser would notice but work around.</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th class="mono">ID</th><th>Gap</th><th>Consequence</th><th>Fix</th><th>Status</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="mono">G13</td>
+          <td><b>The submission form does not link to the published rubric</b></td>
+          <td>
+            A published rubric is a hard precondition of accepting entries, precisely so teams know
+            the standard in advance. The form never shows it to them.
+          </td>
+          <td>Link the published rubric next to the challenge selector.</td>
+          <td class="done">Closed — E17</td>
+        </tr>
+        <tr>
+          <td class="mono">G14</td>
+          <td><b>A team cannot check their own submission after sending it</b></td>
+          <td>
+            The receipt is shown once. If validation later fails — a repository turns private, a
+            commit is force-pushed — the team learns only if an organiser contacts them.
+          </td>
+          <td>A token-authenticated status lookup returning that team's current submission and validation state.</td>
+          <td class="done">Closed — E17</td>
+        </tr>
+        <tr>
+          <td class="mono">G15</td>
+          <td><b><code>scans.event_window</code> ships as <code>null</code></b></td>
+          <td>
+            Provenance flagging for work committed outside the event window cannot function. The
+            threshold beside it (<code>40%</code>) is configured and has nothing to apply to.
+          </td>
+          <td>Set it during event setup; surface it as a readiness check.</td>
+          <td class="done">Closed — E19</td>
+        </tr>
+        <tr>
+          <td class="mono">G16</td>
+          <td><b><code>event.evaluation_date</code> is empty</b></td>
+          <td>
+            The dry-run lead-time readiness check reads <code>UNKNOWN</code> rather than passing or
+            failing — correct behaviour, but it means one of the seven definition-of-done checks
+            can never pass until the date is set.
+          </td>
+          <td>Prompt for it in event setup.</td>
+          <td class="done">Closed — E19</td>
+        </tr>
+        <tr>
+          <td class="mono">G17</td>
+          <td><b>Flagged provenance has no review interface</b></td>
+          <td>
+            <code>GET /scans/provenance/flagged</code> exists and returns submissions needing a
+            human look. Nothing in the web app calls it — the flags surface only inside one team's
+            page, so there is no way to work through them as a queue.
+          </td>
+          <td>A provenance queue beside the intake dashboard.</td>
+          <td class="done">Closed — E19</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════ -->
+<div class="group">
+  <h2>Decided <span class="sev-mark sev-high">1 decision</span></h2>
+  <p>
+    Raised while closing G6, and deliberately not decided unilaterally: it triples the dominant
+    cost of an evaluation, and that is not an implementer's call to make quietly. The project
+    owner has now taken it — <strong>Crucible does not apply the pattern to the scoring calls</strong>
+    — and the reasoning, the controls standing in its place and the evidence that would reverse it
+    are recorded in <a href="adr/0004-no-reviewer-judge-for-scoring.md">ADR 0004</a>.
+  </p>
+
+  <article class="entry high done">
+    <header>
+      <span class="id">G18</span>
+      <h3>The Worker / Reviewer / Judge pattern is not applied to the calls that decide scores</h3>
+      <span class="area">LLM gateway</span>
+      <span class="closed">Closed by decision — ADR 0004</span>
+    </header>
+    <div class="body">
+      <dl>
+        <div class="facet">
+          <dt>What is true today</dt>
+          <dd>
+            <p>
+              P4.3 requires a Worker / Reviewer / Judge sequence for artifacts classified CRITICAL.
+              Rubric synthesis has one. The four call keys that actually produce scores —
+              <code>scoring.criterion</code>, <code>scoring.engineering</code>,
+              <code>scoring.principles</code> and <code>scoring.standards</code> — do not. They are
+              single-pass calls with schema, content and semantic validation, retry on failure, and
+              since E13 a citation check against the scanned source. What they do not have is a
+              second model reading the first model's judgement.
+            </p>
+            <p>
+              G6 closed the part of this that was a <em>naming</em> problem:
+              <code>reviewer_model</code> was renamed to <code>fallback_model</code>, because a
+              column named for a pass that does not run is worse than an absent column. This is
+              what remained once the name told the truth.
+            </p>
+          </dd>
+        </div>
+        <div class="facet">
+          <dt>Why it is not simply implemented</dt>
+          <dd>
+            <p>
+              Scoring is the dominant spend in an evaluation. Adding a reviewer and a judge to the
+              four keys above <strong>roughly triples it</strong>, and the benefit is unmeasured:
+              the calibration gate exists precisely to find out whether this system's judgement
+              tracks a committee's, and it has not been run against a golden set yet.
+            </p>
+            <p>
+              Implementing it first would spend the budget on an assumption. Running calibration
+              first produces the evidence that says whether it is needed, where, and how much it
+              moves the ranking.
+            </p>
+          </dd>
+        </div>
+        <div class="facet">
+          <dt>The decision taken</dt>
+          <dd>
+            <p>
+              Of the three defensible options — apply the pattern to all four keys, apply it only
+              where calibration shows material disagreement, or record the departure as a reasoned
+              exception — <strong>the third was chosen</strong>.
+            </p>
+            <p>
+              P4.3 is amended rather than quietly departed from. The principle now scopes itself
+              to <code>llm_call_registry.requires_review</code>, which is the single place the
+              rule is declared, and states plainly that criticality is not a synonym for reviewed:
+              it governs retry policy, terminality and logging. The controls standing in the
+              pattern's place are named there and in the ADR — citation verification against the
+              scan, three validations, deterministic evidence selection, temperature 0 under a
+              per-run config pin, the double score run, the calibration gate, and human review of
+              every placement in the cut band.
+            </p>
+            <p>
+              <strong>It is pinned by a test, not only by prose.</strong> The exact set of reviewed
+              keys and the reason each CRITICAL key is exempt are asserted in
+              <code>reviewRequirement.test.ts</code>, so a CRITICAL call key added later without a
+              review pass appears in neither list and fails by name. That is the same mechanism
+              the P8.1 allow-list uses, for the same reason.
+            </p>
+            <p>
+              The decision is cheaply reversible: adding review is a registration, a stored prompt
+              and a flag, and the machinery is already in use for rubric synthesis. What would
+              reverse it is calibration showing material disagreement concentrated in one key —
+              and it would justify the cost <em>for that key</em>, not for all four.
+            </p>
+          </dd>
+        </div>
+      </dl>
+    </div>
+  </article>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════ -->
+<div class="group">
+  <h2>What the reference implementation has that this does not</h2>
+  <p>
+    Crucible's discovery was modelled on a much larger upstream capability — roughly 8,200 lines
+    across nine services. Several omissions were deliberate and are recorded as such in ADR 0003.
+    These are the ones that were <em>not</em> deliberate.
+  </p>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>Capability there</th><th>Here</th><th>Assessment</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><b>Durable job queue</b> with staged progress</td>
+          <td>Synchronous request</td>
+          <td>Genuine gap — <span class="sev-mark sev-medium">G7</span></td>
+        </tr>
+        <tr>
+          <td><b>Finding deduplication</b> across runs</td>
+          <td>Wholesale supersede</td>
+          <td>Genuine gap — <span class="sev-mark sev-medium">G8</span></td>
+        </tr>
+        <tr>
+          <td><b>Document enrichment with stated precedence</b> (code wins on stack, vendor and security; docs add purpose)</td>
+          <td>Claims-conflict only</td>
+          <td>
+            Partly deliberate. Crucible refuses to let documentation assert facts about code.
+            But the precedence <em>idea</em> is sound and absent: there is no rule saying which
+            source wins when two disagree, only a report that they do.
+          </td>
+        </tr>
+        <tr>
+          <td><b>Prompt packs</b> — generated prompts a team runs locally, then uploads results</td>
+          <td>None</td>
+          <td>
+            Worth considering. It is the only answer for a repository the server cannot clone,
+            which is otherwise an unrecoverable submission failure.
+          </td>
+        </tr>
+        <tr>
+          <td><b>Manual upload and normalisation</b> of discovery output</td>
+          <td>None</td>
+          <td>Follows from the item above; same reasoning.</td>
+        </tr>
+        <tr>
+          <td><b>Mock result fallback</b> when the provider is unavailable</td>
+          <td>Refused by design</td>
+          <td>
+            <span class="sev-mark sev-low">Correctly rejected</span> Fabricated results presented
+            as real is precisely the failure mode this system exists to prevent.
+          </td>
+        </tr>
+        <tr>
+          <td><b>One prompt returning eleven shapes</b></td>
+          <td>Seven independent calls</td>
+          <td><span class="sev-mark sev-low">Correctly rejected</span> A malformed fragment there loses the whole scan.</td>
+        </tr>
+        <tr>
+          <td><b>Domain-specific capability taxonomy</b></td>
+          <td>Domain-neutral areas</td>
+          <td><span class="sev-mark sev-low">Correctly rejected</span> Hackathon submissions span any domain.</td>
+        </tr>
+        <tr>
+          <td><b>File-level traceability</b></td>
+          <td>File <em>and line</em></td>
+          <td><span class="sev-mark sev-low">Improved on</span> File alone is displayable but not checkable.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════ -->
+<div class="group">
+  <h2>If only three things are done</h2>
+  <p>
+    Written when all seventeen were open, and kept as written. All three were done, in this order,
+    for these reasons:
+  </p>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th class="mono">#</th><th>Item</th><th>Because</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="mono">1</td>
+          <td><b>G1</b> — verify citations against the scan</td>
+          <td>
+            It is the only item that can make the system confidently wrong in a way nobody
+            catches. Everything else is visible when it goes wrong.
+          </td>
+        </tr>
+        <tr>
+          <td class="mono">2</td>
+          <td><b>G2</b> — pin what decides the outcome, and honour the pin</td>
+          <td>
+            The pin is recorded but not enforced, and omits every setting that shapes a composite. The
+            double-run comparison and the calibration gate — the two mechanisms that establish
+            fitness — can both be quietly invalid.
+          </td>
+        </tr>
+        <tr>
+          <td class="mono">3</td>
+          <td><b>G3</b> — discovery in the batch, with coverage reported</td>
+          <td>
+            Closes G11 for free, and removes the fairness risk of ranking a partially discovered
+            field.
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<footer>
+  <p>
+    Compiled by reading the Crucible source at the state verified by <code>pnpm verify</code> —
+    1,675 tests across 95 files, plus 119 end-to-end journeys, all passing. Every item was checked
+    against live source, the live configuration tables, or the running development instance. Where
+    an item says <em>verified</em>, that is the specific check performed.
+  </p>
+  <p>
+    <strong>Revised after E13&#8202;–&#8202;E19.</strong> The seventeen items above are closed and
+    the implementation now verifies at <strong>1,950 tests across 113 files, plus 160 end-to-end
+    journeys</strong>. The original text of each item is unchanged: it says what was true when it
+    was written, and editing it to match the fix would destroy the only record of why the fix
+    exists. G18 was added afterwards and is closed by decision, not by implementation — the
+    distinction matters, and the entry says which.
+  </p>
+  <p>
+    The companion document describes the pipeline these gaps sit in, stage by stage.
+  </p>
+</footer>
+
+</div>

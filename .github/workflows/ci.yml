@@ -1,0 +1,172 @@
+# Crucible CI — the nine quality gates of P10.2.
+#
+# Every gate is blocking. A principle that is only checked by a reviewer's attention is not
+# enforced, and the whole point of P10 is that quality is enforced by CI rather than by care.
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  TEST_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/crucible_test
+  JWT_SECRET: ci-only-jwt-secret-at-least-thirty-two-characters
+
+jobs:
+  # Gates 8 and 9 plus P1.4 — cheap, fail fast, no services needed.
+  guards:
+    name: Guards (naming, gateway, file size)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with: { version: 9 }
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - name: Gate 8 — no upstream-platform references
+        run: pnpm guard:naming
+      - name: Gate 9 — every LLM call routes through the gateway
+        run: pnpm guard:llm
+      - name: P1.4 — file size limits
+        run: pnpm guard:filesize
+
+  # Gates 1 and 4.
+  static:
+    name: Types and lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with: { version: 9 }
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - name: Gate 1 — TypeScript strict, zero untyped any
+        run: pnpm build
+      - name: Gate 4 — ESLint, including max-lines
+        run: pnpm lint
+
+  # Gates 2, 3 and 6.
+  test:
+    name: Tests
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: crucible_test
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd pg_isready --health-interval 10s
+          --health-timeout 5s --health-retries 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with: { version: 9 }
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+
+      - name: Gate 2 — unit tests with coverage
+        run: pnpm vitest run --project unit --coverage
+
+      - name: Gate 3 — integration tests against a real database
+        run: pnpm vitest run --project integration
+
+      - name: Gate 6 — API contract tests (no breaking changes)
+        run: pnpm vitest run --project api
+
+      - name: Frontend tests
+        run: pnpm vitest run --project web
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage
+          path: coverage/
+          retention-days: 7
+
+  # P8.6 / P10.1 — the containment gate. Runs genuinely hostile code inside the sandbox and
+  # asserts the host is unaffected. This job is REQUIRED: the suite fails rather than skips when
+  # no container runtime is present, because a green suite without this evidence proves nothing.
+  security:
+    name: Sandbox containment (P8.6)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with: { version: 9 }
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+
+      - name: Confirm a container runtime is present
+        # Checked explicitly so a missing runtime fails here, with a clear reason, rather than
+        # deeper in the suite where it could be mistaken for a flaky test.
+        run: docker version
+
+      - name: Pre-pull probe base images
+        run: |
+          docker pull alpine:3.20
+          docker pull python:3.12-slim-bookworm
+          docker pull node:22-bookworm-slim
+
+      - name: Run the containment gate
+        run: pnpm test:security
+
+  e2e:
+    name: E2E
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: crucible_test
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd pg_isready --health-interval 10s
+          --health-timeout 5s --health-retries 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with: { version: 9 }
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+      - run: pnpm exec playwright install --with-deps chromium
+      - name: Apply migrations
+        run: pnpm migrate
+        env:
+          DATABASE_URL: ${{ env.TEST_DATABASE_URL }}
+      - run: pnpm test:e2e
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7
+
+  # Gate 5 — secret scanning. A commit matching a secret pattern is rejected (P8.3).
+  secrets:
+    name: Secret scanning
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

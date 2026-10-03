@@ -1,0 +1,9 @@
+label,repo_url,band,edge_case,build_method,build_command
+Reference B1,https://github.com/jaymahapatra2023/ref-b01,STRONG,,DOCKERFILE,
+Reference B2,https://github.com/jaymahapatra2023/ref-b02,STRONG,,DOCKERFILE,
+Reference B3,https://github.com/jaymahapatra2023/ref-b03,MIDDLING,,DOCKERFILE,
+Reference B4,https://github.com/jaymahapatra2023/ref-b04,MIDDLING,VERY_LARGE,DOCKERFILE,
+Reference B5,https://github.com/jaymahapatra2023/ref-b05,WEAK,,DOCKERFILE,
+Reference B6,https://github.com/jaymahapatra2023/ref-b06,WEAK,SCAFFOLD_ONLY,DOCKERFILE,
+Reference B7,https://github.com/jaymahapatra2023/ref-b07,WEAK,FAILS_TO_BUILD,DOCKERFILE,
+Reference B8,https://github.com/jaymahapatra2023/ref-b08,MIDDLING,WRONG_PROBLEM,DOCKERFILE,

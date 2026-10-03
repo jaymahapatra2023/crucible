@@ -1,0 +1,34 @@
+node_modules/
+dist/
+coverage/
+.env
+.env.local
+*.log
+.DS_Store
+playwright-report/
+test-results/
+.tmp/
+apps/web/dist/
+
+# CDK synthesis output (deploy/aws/cdk)
+cdk.out/
+
+# Event staff credentials, generated locally. Never committed.
+EVENT-CREDENTIALS.local.txt
+
+# Backups of the environment file. One of these held a live SMTP password, the JWT secret and
+# the token-reveal key; a backup is not less of a secret for having a different name.
+.env.bak*
+.env.*.bak
+
+# Participant and volunteer exports. The registration form export carries 99 students' names,
+# email addresses, phone numbers, institutions and dietary notes. This repository is PUBLIC.
+# Keep the exports on the organiser's machine and load them with scripts/load-participants.sh.
+docs/*Registration Form*
+docs/*Volunteers*
+# Lincoln's own event deck. Internal company material, and this repository is PUBLIC.
+# Anywhere, not just docs/: a copy had also been left in e2e/.
+*Opening Presentation*
+*.xlsx
+participants.csv
+coaches.csv

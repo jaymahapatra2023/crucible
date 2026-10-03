@@ -1,0 +1,22 @@
+{
+  "$comment": "P1.4 hard file-size limits. THE single declaration of 'what is the limit for this file'. eslint.config.js derives its max-lines overrides from this file; scripts/guard-filesize.mjs derives the non-TypeScript checks (SQL migrations) from the same rows. Per P1.5 clause 6, secondary views are derived, never hand-synced. First matching pattern wins, so order from most specific to least.",
+  "limits": [
+    { "pattern": "**/*Orchestrator.ts",            "max": 600, "kind": "Orchestrator / coordinator" },
+    { "pattern": "**/orchestration/**/*.ts",       "max": 600, "kind": "Orchestrator / coordinator" },
+    { "pattern": "**/routes/**/*.ts",              "max": 300, "kind": "Route handler file" },
+    { "pattern": "**/db/**/*.ts",                  "max": 300, "kind": "Database query module" },
+    { "pattern": "**/services/**/*.ts",            "max": 400, "kind": "Service file" },
+    { "pattern": "**/types/**/*.ts",               "max": 150, "kind": "TypeScript type file" },
+    { "pattern": "**/types.ts",                    "max": 150, "kind": "TypeScript type file" },
+    { "pattern": "**/*.test.ts",                   "max": 500, "kind": "Test file" },
+    { "pattern": "**/*.test.tsx",                  "max": 500, "kind": "Test file" },
+    { "pattern": "**/*.spec.ts",                   "max": 500, "kind": "Test file" },
+    { "pattern": "apps/web/src/pages/**/*.tsx",    "max": 400, "kind": "React page" },
+    { "pattern": "apps/web/src/components/**/*.tsx", "max": 250, "kind": "React component" },
+    { "pattern": "apps/web/src/**/*.tsx",          "max": 250, "kind": "React component" },
+    { "pattern": "db/migrations/*.sql",            "max": 150, "kind": "Database migration" },
+    { "pattern": "packages/*/src/**/*.ts",         "max": 400, "kind": "Package module" },
+    { "pattern": "**/lib/**/*.ts",                 "max": 200, "kind": "Utility / helper" },
+    { "pattern": "**/*.ts",                        "max": 400, "kind": "TypeScript module" }
+  ]
+}
