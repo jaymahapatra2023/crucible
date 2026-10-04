@@ -105,6 +105,10 @@ test('5 · the team submits with that code, and can check its own entry', async 
 })
 
 test('6 · the organiser sees the entry, the chase list drops the team, and the automatic checks settle', async ({ page }) => {
+  // The poll below allows 120s; without this the test's own 30s cap expires first, so the
+  // allowance was never real. It passed only while the checks happened to settle inside 30s —
+  // the COMMAND path now prepares a sandbox image before it runs anything, which is slower.
+  test.setTimeout(180_000)
   await signInAs(page, 'organiser')
   await page.goto('/intake')
   await expect(page.getByTestId('count-submitted')).toHaveText('1')

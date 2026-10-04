@@ -197,6 +197,38 @@ describe('command path (E05-S03)', () => {
     expect(result.log).toContain('the repository was copied in')
   }, 300_000)
 
+  it('CAN WRITE to its own working directory — every real build command does', async () => {
+    /*
+     * The regression that cost a team the runs dimension at the event. `docker cp` left /work
+     * owned by root with the files owned by the host user, while the container runs as
+     * --user 1000:1000, so the first thing any ordinary build does — write a lock file, a
+     * build directory, a compiled artefact — died with EACCES before the team's code ran.
+     *
+     * Every test above this one only READ, which is why the suite was green throughout.
+     */
+    const result = await probe({
+      repoPath: build({
+        'write.py': 'open("artefact.txt", "w").write("built")\nprint("wrote", open("artefact.txt").read())',
+      }),
+      buildMethod: 'COMMAND', buildCommand: 'python3 write.py', language: 'python',
+      policy: POLICY,
+    })
+    expect(result.probeError).toBeNull()
+    expect(result.buildExitCode).toBe(0)
+    expect(result.log).toContain('wrote built')
+    expect(result.log).not.toMatch(/EACCES|Permission denied/i)
+  }, 300_000)
+
+  it('can create a directory in the working tree, as a package install does', async () => {
+    const result = await probe({
+      repoPath: build({ 'mk.py': 'import os\nos.makedirs("deps/pkg")\nprint("made", os.path.isdir("deps/pkg"))' }),
+      buildMethod: 'COMMAND', buildCommand: 'python3 mk.py', language: 'python',
+      policy: POLICY,
+    })
+    expect(result.buildExitCode).toBe(0)
+    expect(result.log).toContain('made True')
+  }, 300_000)
+
   it('refuses a COMMAND declaration with no command', async () => {
     const result = await probe({
       repoPath: build({ 'a.txt': 'x' }), buildMethod: 'COMMAND', language: 'python',

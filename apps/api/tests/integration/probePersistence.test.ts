@@ -41,7 +41,17 @@ function scriptRuntime(script: {
       }
     }
     if (command === 'logs') return { ...base, exitCode: 0, stdout: script.stdout ?? '' }
-    if (command === 'start' || command === 'build') {
+
+    // Our own wrapper build on the COMMAND path, identified the way the real one is: it is the
+    // only build that names `.crucible-probe.Dockerfile`. It copies the team's files in with the
+    // right ownership and runs nothing of theirs, so it never carries their exit code — and if
+    // it failed it would be a PROBE_ERROR, not a failed build.
+    if (command === 'build' && args.includes('.crucible-probe.Dockerfile')) {
+      return { ...base, exitCode: 0, stdout: 'sandbox image prepared' }
+    }
+
+    // The team's own step: `build` on the Dockerfile path, `run` on the command path.
+    if (command === 'start' || command === 'build' || command === 'run') {
       return {
         ...base,
         exitCode: script.buildExit ?? 0,

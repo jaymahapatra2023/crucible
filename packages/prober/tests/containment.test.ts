@@ -248,6 +248,25 @@ describe('the sandbox leaves nothing behind (acceptance 1)', () => {
     })
     expect(listed.stdout).not.toMatch(/crucible-(cmd|run)-/)
   }, 300_000)
+
+  it('removes every IMAGE it created too', async () => {
+    // Containers were checked here from the start; images were not, and a leak went unnoticed
+    // until a tagged sandbox image was found sitting in the local store after a probe run.
+    // Thirty submissions times two runs is sixty images, each carrying a copy of a repository.
+    const { docker } = await import('../src/containerRuntime.js')
+    await probe({
+      repoPath: buildRepo(benignFixture),
+      buildMethod: 'COMMAND',
+      buildCommand: benignFixture.buildCommand,
+      language: benignFixture.language,
+      policy: POLICY,
+    })
+
+    const images = await docker(['images', '--format', '{{.Repository}}:{{.Tag}}'], {
+      timeoutMs: 30_000, capBytes: 256 * 1024,
+    })
+    expect(images.stdout).not.toMatch(/^crucible-(cmd|probe):/m)
+  }, 300_000)
 })
 
 describe('where the container starts (the WORKDIR override)', () => {
