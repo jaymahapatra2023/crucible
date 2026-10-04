@@ -6,7 +6,7 @@
  * provider wobble on evaluation night degrades one submission or stalls the whole cohort.
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { anthropicProvider, resetBreaker } from './anthropicProvider.js'
+import { acceptsTemperature, anthropicProvider, resetBreaker } from './anthropicProvider.js'
 import { ProviderError } from './providerContract.js'
 import { resetEnvCache } from '../../../config/env.js'
 
@@ -51,14 +51,17 @@ describe('availability', () => {
     expect(anthropicProvider.isAvailable()).toBe(true)
   })
 
+  // Set to EMPTY rather than deleted. `loadEnv` falls back to the .env file on disk, so
+  // deleting the variable let a key in the developer's own .env satisfy these tests — they
+  // passed only while that file happened to have none, and broke the moment it had one.
   it('is unavailable without a key, rather than failing at call time', () => {
-    delete process.env['ANTHROPIC_API_KEY']
+    process.env['ANTHROPIC_API_KEY'] = ''
     resetEnvCache()
     expect(anthropicProvider.isAvailable()).toBe(false)
   })
 
   it('reports a named error when called with no key', async () => {
-    delete process.env['ANTHROPIC_API_KEY']
+    process.env['ANTHROPIC_API_KEY'] = ''
     resetEnvCache()
     await expect(anthropicProvider.complete(REQUEST)).rejects.toThrow(/ANTHROPIC_API_KEY is not configured/)
   })
@@ -187,5 +190,46 @@ describe('circuit breaker (P12.2)', () => {
     await anthropicProvider.complete(REQUEST).catch(() => undefined)
     const err = await anthropicProvider.complete(REQUEST).catch((e) => e as ProviderError)
     expect(err?.message ?? '').not.toMatch(/circuit breaker/)
+  })
+})
+
+describe('temperature, which the Claude 5 family refuses', () => {
+  /*
+   * `400: "temperature" is deprecated for this model`. Sending it failed EVERY call, and it was
+   * invisible until the event because calibration ran through the CLI provider, which does not
+   * pass the parameter. 208 of 224 criterion scores were lost to it on the first real use.
+   */
+  const bodiesSent = (): Array<Record<string, unknown>> => {
+    const bodies: Array<Record<string, unknown>> = []
+    vi.stubGlobal('fetch', vi.fn(async (_url: unknown, init: { body: string }) => {
+      bodies.push(JSON.parse(init.body) as Record<string, unknown>)
+      return jsonResponse(OK_BODY)
+    }))
+    return bodies
+  }
+
+  it('does NOT send temperature to a Claude 5 model', async () => {
+    const bodies = bodiesSent()
+    await anthropicProvider.complete({ ...REQUEST, model: 'claude-sonnet-5' })
+    expect(bodies[0]).not.toHaveProperty('temperature')
+    // Everything else still goes, so this is a removal and not a broken request.
+    expect(bodies[0]).toMatchObject({ model: 'claude-sonnet-5', max_tokens: 1024 })
+  })
+
+  it('DOES send it to a model that accepts it, so determinism is not dropped everywhere', async () => {
+    const bodies = bodiesSent()
+    await anthropicProvider.complete({ ...REQUEST, model: 'claude-3-5-sonnet-20241022' })
+    expect(bodies[0]).toMatchObject({ temperature: 0 })
+  })
+
+  it('classifies by family, and treats an UNKNOWN model as accepting it', () => {
+    // Deny-list, not allow-list: a new model that also refuses the parameter fails loudly on
+    // its first call rather than quietly scoring under different settings.
+    for (const m of ['claude-opus-5', 'claude-sonnet-5', 'claude-haiku-5', 'claude-fable-5-1']) {
+      expect(acceptsTemperature(m), m).toBe(false)
+    }
+    for (const m of ['claude-3-5-sonnet-20241022', 'claude-haiku-4-5-20251001', 'some-new-model']) {
+      expect(acceptsTemperature(m), m).toBe(true)
+    }
   })
 })

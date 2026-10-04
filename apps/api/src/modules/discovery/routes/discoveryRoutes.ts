@@ -16,6 +16,11 @@ import { principalOf, requireRole } from '../../../http/auth.js'
 import { AppError } from '../../../lib/appError.js'
 import { discoverSubmission } from '../services/discoveryService.js'
 import { discoveryView } from '../services/discoveryView.js'
+
+const discoverBody = z.object({
+  /** Re-describe even if this commit has already been described. Seven model calls. */
+  force: z.boolean().default(false),
+})
 import {
   conflictsFor, dismissFinding, findingsFor, reinstateFinding,
 } from '../db/discoveryDb.js'
@@ -50,14 +55,26 @@ export async function registerDiscoveryRoutes(app: FastifyInstance): Promise<voi
     }))),
   )
 
+  /**
+   * Describe a submission.
+   *
+   * Returns the existing description when the submission has already been described at this
+   * commit, which is what the batch wants — but an organiser asking again usually means they
+   * believe the description is wrong, so `force` is here for them. It is seven model calls, so
+   * it is never the default.
+   */
   app.post('/api/v1/submissions/:id/discovery', { preHandler: requireRole('organiser') },
     async (req, reply) => {
       const { id } = params(req, idParams)
+      const input = req.body ? body(req, discoverBody) : { force: false }
       const outcome = await discoverSubmission({
         submissionId: id,
         actor: principalOf(req).email,
+        force: input.force,
       })
-      reply.code(201)
+      // 200 for a description that already existed, 201 for one that was just made. A caller
+      // that spent nothing should not be told something was created.
+      reply.code(outcome.reused ? 200 : 201)
       return ok(outcome)
     })
 

@@ -49,6 +49,17 @@ afterEach(() => {
 
 const discover = () => inScope(() => discoverSubmission({ submissionId, actor: ACTOR }))
 
+/**
+ * Describe the submission AGAIN at the same commit.
+ *
+ * An unforced repeat now returns the first description instead of buying a second one, which is
+ * the point of the reuse — but comparing one description with the next needs two of them, so
+ * these tests ask for the work explicitly.
+ */
+const rediscover = () => inScope(() => discoverSubmission({
+  submissionId, actor: ACTOR, force: true,
+}))
+
 async function aSecurityFinding(): Promise<number> {
   const row = await query<{ finding_id: number }>(
     `SELECT finding_id FROM discovery_finding
@@ -172,7 +183,7 @@ describe('what changed since the previous discovery (E16-S04)', () => {
   it('reports an identical re-run as unchanged', async () => {
     await discover()
     provider.setResponder(discoveryResponder())
-    await discover()
+    await rediscover()
 
     const diff = await diffLatest(submissionId)
     expect(diff.comparable).toBe(true)
@@ -186,7 +197,7 @@ describe('what changed since the previous discovery (E16-S04)', () => {
     provider.setResponder(discoveryResponder({
       'discovery.security': { observations: [] },
     }))
-    await discover()
+    await rediscover()
 
     const diff = await diffLatest(submissionId)
     expect(diff.resolvedSecurity.length).toBeGreaterThan(0)
@@ -198,7 +209,7 @@ describe('what changed since the previous discovery (E16-S04)', () => {
     // indistinguishable from here, and saying "resolved" would invent a conclusion.
     await discover()
     provider.setResponder(discoveryResponder({ 'discovery.security': { observations: [] } }))
-    await discover()
+    await rediscover()
 
     // The hedge itself is the property. Asserting the ABSENCE of the word "fixed" would be the
     // wrong shape — the honest sentence contains it, inside the caveat.

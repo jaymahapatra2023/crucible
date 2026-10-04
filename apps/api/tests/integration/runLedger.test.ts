@@ -60,6 +60,30 @@ describe('run lifecycle', () => {
     expect(detail.stages[0]?.message).toContain('scoring blew up')
   })
 
+  it('RETURNS the stage result even when the ledger write is impossible', async () => {
+    /*
+     * Bookkeeping must not destroy the work it records. The failure path has always been guarded
+     * for this reason; the success path was not, so an unwritable ledger turned a check that had
+     * succeeded into a failed one. Seen in the wild as a foreign-key violation when a run was
+     * removed while its drain was still in flight: the pre-flight stayed RUNNING until the
+     * watchdog gave up and emailed the team that their entry could not be checked.
+     *
+     * The run is deleted here, so the stage row cannot be written at all.
+     */
+    const run = await inScope(() => openRun({ kind: 'SCAN' }))
+    await query('DELETE FROM run WHERE run_id = $1', [run.runId])
+
+    const result = await inScope(() => stage(
+      { runId: run.runId, stage: 'scan' },
+      async () => ({ value: 'the work still happened', ...stageOutcome('ok', 'done') }),
+    ))
+    expect(result.value).toBe('the work still happened')
+
+    // And nothing was recorded, which is the honest outcome — not a fabricated row.
+    const rows = await query('SELECT 1 FROM run_stage_result WHERE run_id = $1', [run.runId])
+    expect(rows.rows).toHaveLength(0)
+  })
+
   it('captures stage timing', async () => {
     const run = await inScope(() => openRun({ kind: 'SCAN' }))
     await stage({ runId: run.runId, stage: 'timed' }, async () => {

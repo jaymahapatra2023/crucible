@@ -156,7 +156,17 @@ export function submissionWarnings(draft: SubmissionDraft): string[] {
   // cost an entry its Runs score, and `sh` reports it as "not found" on the first word.
   const first = command.split(/\s+/)[0] ?? ''
   const labels = command.match(/(?:^|\s)[A-Z][A-Za-z ]{0,20}:(?=\s)/g) ?? []
-  if (first.endsWith(':') || labels.length >= 2 || /\n/.test(command)) {
+
+  // Prose with no colons in it at all. A second entry wrote "select the index.html inside of the
+  // lifemap-ai folder, then run \"npm run api\"", which the rules above let through: no label, no
+  // newline, and a first word that looks like a program. So English is detected directly — these
+  // words are ordinary in a sentence and almost never standalone tokens in a shell command.
+  // Two are required, so a directory honestly called `the-api` cannot trip it on its own.
+  const prose = (command.toLowerCase().match(
+    /(?:^|[\s,"'])(the|then|inside|folder|file|please|first|next|after|your|open|select|navigate)(?=[\s,."']|$)/g,
+  ) ?? []).length
+
+  if (first.endsWith(':') || labels.length >= 2 || /\n/.test(command) || prose >= 2) {
     warnings.push(
       'This looks like instructions rather than one command. We run exactly what is in this box, '
       + 'as a single shell command — anything like "Frontend:" or "Start:" will be read as a '

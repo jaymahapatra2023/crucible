@@ -23,6 +23,17 @@ export type ReviewReason =
   | 'DIMENSION_UNSCORED'
   /** Some criteria within a scored dimension could not be judged. */
   | 'PARTIAL_EVIDENCE'
+  /**
+   * Too little of the rubric produced a score for the composite to mean anything.
+   *
+   * Distinct from PARTIAL_EVIDENCE, which says some evidence is missing. This says so much is
+   * missing that the number should not be read as a score at all. Measured at the event: across
+   * fifteen entries, coverage and rank correlated at +0.61 — the entry ranked first had scored
+   * 39% of the rubric and the entry ranked last had scored 91%. Because a dimension averages
+   * over the weight it covered, a criterion an entry would have failed RAISES its mark by being
+   * absent, so a thin composite does not merely carry more uncertainty, it is biased upward.
+   */
+  | 'COVERAGE_TOO_LOW'
 
 /** Plain language for each code, for the UI and the export. */
 export const REVIEW_REASON_TEXT: Record<ReviewReason, string> = {
@@ -33,15 +44,28 @@ export const REVIEW_REASON_TEXT: Record<ReviewReason, string> = {
   COHORT_BELOW_FLOOR: 'cohort too small to normalise; scored absolutely',
   DIMENSION_UNSCORED: 'a whole dimension could not be scored',
   PARTIAL_EVIDENCE: 'scored on partial evidence',
+  COVERAGE_TOO_LOW:
+    'too little of the rubric produced a score — read this as unranked pending review, not as a '
+    + 'score, because missing criteria push a composite UP rather than down',
 }
 
 export function reviewReasons(input: {
   entry: RankedSubmission
   inCutBand: boolean
   advisoryDecided: boolean
+  /** Below this share of the rubric's weight, a composite is not a score. 0 disables it. */
+  coverageFloor?: number | undefined
 }): ReviewReason[] {
   const { entry } = input
   const reasons: ReviewReason[] = []
+
+  // First, because it is the reason that most changes what a reviewer should do: it says do not
+  // read the number. Everything below it qualifies a score; this one withdraws it.
+  const floor = input.coverageFloor ?? 0
+  if (floor > 0 && entry.criterionCoverage !== undefined
+      && entry.criterionCoverage < floor) {
+    reasons.push('COVERAGE_TOO_LOW')
+  }
 
   if (input.advisoryDecided) reasons.push('ADVISORY_DECIDED')
   if (input.inCutBand) reasons.push('IN_CUT_BAND')

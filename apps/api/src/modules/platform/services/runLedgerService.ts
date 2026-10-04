@@ -87,20 +87,30 @@ export async function stage<T>(
   try {
     const result = await fn()
     const meta = extractMeta(result)
-    await upsertStageResult({
-      ...base,
-      outcome: meta.outcome,
-      message: meta.message,
-      detail: meta.detail,
-      durationMs: Date.now() - started,
-    })
-    publish(runTopic(opts.runId), 'stage', {
-      stage: opts.stage,
-      subjectId: opts.subjectId ?? null,
-      outcome: meta.outcome,
-      message: meta.message,
-      durationMs: Date.now() - started,
-    })
+    // Guarded for the same reason the failure path below is guarded, which was the asymmetry
+    // here: bookkeeping must not destroy the work it is recording. An unguarded write turned a
+    // check that HAD succeeded into a failed one whenever the ledger row was unreachable, and
+    // because the caller then threw, the pre-flight it belonged to stayed RUNNING until the
+    // watchdog gave up and told the team their entry could not be checked. Observed as a
+    // foreign-key violation when a run was removed while its drain was still in flight.
+    try {
+      await upsertStageResult({
+        ...base,
+        outcome: meta.outcome,
+        message: meta.message,
+        detail: meta.detail,
+        durationMs: Date.now() - started,
+      })
+      publish(runTopic(opts.runId), 'stage', {
+        stage: opts.stage,
+        subjectId: opts.subjectId ?? null,
+        outcome: meta.outcome,
+        message: meta.message,
+        durationMs: Date.now() - started,
+      })
+    } catch (ledgerErr: unknown) {
+      log.error('failed to record stage success', { err: ledgerErr, stage: opts.stage })
+    }
     return result
   } catch (err) {
     await upsertStageResult({

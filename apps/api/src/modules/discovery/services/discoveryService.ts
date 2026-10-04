@@ -23,7 +23,7 @@ import { withRunPin, type RunPin } from '../../../lib/runScope.js'
 import { persistedScanRef } from '../../scans/services/scanService.js'
 import { writeAudit } from '../../governance/services/auditService.js'
 import {
-  finishDiscovery, insertConflicts, insertFindings, openDiscovery,
+  currentDiscovery, finishDiscovery, insertConflicts, insertFindings, openDiscovery,
   type DiscoveryRunRow,
 } from '../db/discoveryDb.js'
 import { CONCERNS, type ConcernKey, type ConcernResult } from './discoveryConcerns.js'
@@ -45,6 +45,13 @@ export interface DiscoverInput {
    * under a cost ceiling and its progress into the ledger (E15-S01).
    */
   runId?: number | undefined
+  /**
+   * Re-describe the submission even if it has already been described at this commit.
+   *
+   * Off by default, because discovery is seven sequential model calls and the thing it
+   * describes is a fixed commit. See the reuse check in `discoverSubmission`.
+   */
+  force?: boolean | undefined
 }
 
 export interface DiscoverOutcome {
@@ -56,6 +63,8 @@ export interface DiscoverOutcome {
   usable: boolean
   /** Why the run stopped short, when it did. Null when every concern was attempted. */
   paused: string | null
+  /** True when this returned an earlier description instead of making any model call. */
+  reused: boolean
 }
 
 export async function discoverSubmission(input: DiscoverInput): Promise<DiscoverOutcome> {
@@ -68,6 +77,38 @@ export async function discoverSubmission(input: DiscoverInput): Promise<Discover
   }
 
   const scan = await persistedScanRef(input.submissionId)
+
+  // Already described, at this very commit? Then return that description rather than buying it
+  // again. Scan and probe have always worked this way; discovery did not, and it is by far the
+  // most expensive of the three — seven sequential model calls, measured at 12 minutes and
+  // sometimes 19 per submission. Pre-flight describes every entry as it arrives, so without
+  // this a cohort run of thirty teams spent two hours re-learning what it already knew.
+  //
+  // Keyed on the COMMIT, not the submission: the same commit is the same code, which is the
+  // only thing that makes a description still true. A null sha on either side is not a match —
+  // we cannot show they are the same, so we do the work.
+  if (input.force !== true) {
+    const existing = await currentDiscovery(input.submissionId)
+    if (existing !== null && existing.status === 'COMPLETED'
+        && existing.commit_sha !== null && existing.commit_sha === scan.commitSha) {
+      const concerns = existing.concerns as Record<string, ConcernResult>
+      log.info('submission already described at this commit; reusing', {
+        submissionId: input.submissionId, discoveryId: Number(existing.discovery_id),
+        commitSha: existing.commit_sha,
+      })
+      return {
+        discoveryId: Number(existing.discovery_id),
+        status: 'COMPLETED',
+        concerns,
+        // Nothing was spent NOW. The original run carries what it cost; reporting it twice
+        // would make a cohort look twice as expensive as it was.
+        costUsd: 0,
+        usable: Object.values(concerns).some((c) => c.outcome === 'FOUND'),
+        paused: null,
+        reused: true,
+      }
+    }
+  }
 
   // Its own ledger run when nobody supplied one. Seven sequential model calls with no run is
   // seven calls nothing can account for: no progress, no resume, and spend outside every
@@ -216,7 +257,7 @@ async function execute(
   })
 
   log.info('discovery completed', { discoveryId, submissionId: input.submissionId, costUsd, usable })
-  return { discoveryId, status: 'COMPLETED', concerns, costUsd, usable, paused }
+  return { discoveryId, status: 'COMPLETED', concerns, costUsd, usable, paused, reused: false }
 }
 
 /**

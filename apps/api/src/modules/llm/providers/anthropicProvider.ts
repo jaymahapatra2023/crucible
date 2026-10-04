@@ -50,6 +50,17 @@ interface AnthropicResponseBody {
   error?: { type?: string; message?: string }
 }
 
+/**
+ * Whether a model still accepts `temperature`.
+ *
+ * A deny-list rather than an allow-list: an unknown model is sent the parameter, which is the
+ * behaviour every model before this family had. A new model that also refuses it will fail
+ * loudly on its first call rather than silently scoring differently.
+ */
+export function acceptsTemperature(model: string): boolean {
+  return !/^claude-(opus|sonnet|haiku|fable)-5/.test(model)
+}
+
 export const anthropicProvider: ModelProvider = {
   name: 'anthropic',
 
@@ -91,7 +102,16 @@ export const anthropicProvider: ModelProvider = {
         body: JSON.stringify({
           model: req.model,
           max_tokens: req.maxTokens,
-          temperature: req.temperature,
+          // Sent only to models that still accept it. The Claude 5 family refuses the request
+          // outright — `400: "temperature" is deprecated for this model` — so including it
+          // failed EVERY call. It went unnoticed because the calibration runs all went through
+          // the CLI provider, which does not pass it; the first real use of this path at the
+          // event lost 208 of 224 criterion scores to it.
+          //
+          // Determinism for those models therefore rests on the provider default rather than on
+          // a parameter we set. That is a weaker guarantee and it is the honest one: scoring
+          // measured its own reproducibility across two runs rather than assuming it.
+          ...(acceptsTemperature(req.model) ? { temperature: req.temperature } : {}),
           system: req.system,
           messages: [{ role: 'user', content: req.user }],
         }),

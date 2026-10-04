@@ -63,10 +63,11 @@ export async function computeRanking(
     throw new AppError('NOT_FOUND', `Scoring run ${runIndexId} was not found.`)
   }
 
-  const [cutLine, bandSize, minCohortSize] = await Promise.all([
+  const [cutLine, bandSize, minCohortSize, coverageFloor] = await Promise.all([
     getNumber('scoring.cut_line'),
     getNumber('scoring.cut_band_size'),
     getNumber('scoring.min_cohort_size'),
+    getNumber('scoring.min_criterion_coverage'),
   ])
 
   const { ranked, dimensions, fallbackChallenges } = await compositesForRun(runIndexId)
@@ -88,6 +89,7 @@ export async function computeRanking(
       entry,
       inCutBand: band.has(entry.submissionId),
       advisoryDecided: advisory.has(entry.submissionId),
+      coverageFloor,
     }),
     submissionId: entry.submissionId,
     challengeId: entry.challengeId,

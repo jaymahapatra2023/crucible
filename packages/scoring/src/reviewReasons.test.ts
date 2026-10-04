@@ -21,12 +21,13 @@ const entry = (overrides: Partial<RankedSubmission> = {}): RankedSubmission => (
 
 const reasonsFor = (
   overrides: Partial<RankedSubmission> = {},
-  flags: { inCutBand?: boolean; advisoryDecided?: boolean } = {},
+  flags: { inCutBand?: boolean; advisoryDecided?: boolean; coverageFloor?: number } = {},
 ): ReviewReason[] =>
   reviewReasons({
     entry: entry(overrides),
     inCutBand: flags.inCutBand ?? false,
     advisoryDecided: flags.advisoryDecided ?? false,
+    coverageFloor: flags.coverageFloor,
   })
 
 describe('what raises a flag', () => {
@@ -113,5 +114,49 @@ describe('ordering and vocabulary', () => {
 
   it('words the advisory reason so it cannot be read as an instruction to demote', () => {
     expect(REVIEW_REASON_TEXT.ADVISORY_DECIDED).toMatch(/must not decide it alone/)
+  })
+})
+
+describe('a composite built on too little of the rubric', () => {
+  /*
+   * The event's first full run: across fifteen entries, coverage and rank correlated at +0.61.
+   * The entry ranked FIRST had scored 39% of the rubric; the entry ranked LAST had scored 91%.
+   * Missing criteria do not merely add uncertainty — because a dimension averages over the
+   * weight it covered, they push a composite UP. So below a floor the number is withdrawn
+   * rather than qualified.
+   */
+  it('flags coverage below the floor', () => {
+    expect(reasonsFor({ criterionCoverage: 0.39 }, { coverageFloor: 0.7 }))
+      .toContain('COVERAGE_TOO_LOW')
+  })
+
+  it('does NOT flag coverage at or above the floor', () => {
+    expect(reasonsFor({ criterionCoverage: 0.7 }, { coverageFloor: 0.7 }))
+      .not.toContain('COVERAGE_TOO_LOW')
+    expect(reasonsFor({ criterionCoverage: 0.93 }, { coverageFloor: 0.7 }))
+      .not.toContain('COVERAGE_TOO_LOW')
+  })
+
+  it('LEADS with it, because it tells a reviewer not to read the score at all', () => {
+    // Every other reason qualifies a number. This one withdraws it, so a truncated list must
+    // show it first.
+    const reasons = reasonsFor(
+      { criterionCoverage: 0.3, partial: true, normalisationMethod: 'ABSOLUTE_FALLBACK', tied: true },
+      { coverageFloor: 0.7, inCutBand: true, advisoryDecided: true },
+    )
+    expect(reasons[0]).toBe('COVERAGE_TOO_LOW')
+    expect(reasons.length).toBeGreaterThan(3)
+  })
+
+  it('is disabled by a floor of 0, so an operator can turn it off without a deploy', () => {
+    expect(reasonsFor({ criterionCoverage: 0.1 }, { coverageFloor: 0 }))
+      .not.toContain('COVERAGE_TOO_LOW')
+    expect(reasonsFor({ criterionCoverage: 0.1 }, {})).not.toContain('COVERAGE_TOO_LOW')
+  })
+
+  it('says, in words, that the number is biased UP rather than merely uncertain', () => {
+    // A reviewer who reads "partial evidence" assumes the score is conservative. It is not.
+    expect(REVIEW_REASON_TEXT.COVERAGE_TOO_LOW).toMatch(/unranked pending review/)
+    expect(REVIEW_REASON_TEXT.COVERAGE_TOO_LOW).toMatch(/UP/)
   })
 })

@@ -165,11 +165,18 @@ describe('a gap is never an absence (P5.1)', () => {
 })
 
 describe('re-running supersedes rather than accumulating', () => {
+  // These describe what happens when a submission is described AGAIN, which is now the forced
+  // path: an unforced second call at the same commit reuses the first (see the reuse tests).
+  // Superseding is unchanged — it is just no longer what an ordinary repeat call does.
+  const rerun = () => inScope(() => discoverSubmission({
+    submissionId, actor: ACTOR, force: true,
+  }))
+
   it('keeps one current run and hides the old findings from the current view', async () => {
     provider.setResponder(discoveryResponder())
     const first = await run()
     provider.setResponder(discoveryResponder())
-    const second = await run()
+    const second = await rerun()
 
     expect(second.discoveryId).not.toBe(first.discoveryId)
     const current = await query<{ n: number }>(
@@ -185,7 +192,7 @@ describe('re-running supersedes rather than accumulating', () => {
     provider.setResponder(discoveryResponder())
     const first = await run()
     provider.setResponder(discoveryResponder())
-    await run()
+    await rerun()
 
     const kept = await query<{ n: number }>(
       'SELECT COUNT(*)::int AS n FROM discovery_finding WHERE discovery_id = $1',
@@ -267,5 +274,64 @@ describe('a run that breaks entirely', () => {
     const view = await discoveryView(submissionId)
     expect(view.gaps).toHaveLength(7)
     expect(view.tiles.every((t) => t.count === null)).toBe(true)
+  })
+})
+
+describe('describing the same commit twice (reuse)', () => {
+  /*
+   * Discovery is seven sequential model calls, measured at 12 minutes per submission and
+   * sometimes 19. Pre-flight describes every entry as it arrives, so a cohort run that
+   * re-described all of them spent two hours re-learning what it already knew — the single
+   * biggest cost in the judging window, and larger than scanning and probing put together.
+   *
+   * Scan and probe had always reused; discovery had not.
+   */
+  it('returns the earlier description and makes NO model call', async () => {
+    provider.setResponder(discoveryResponder())
+    const first = await run()
+    expect(first.reused).toBe(false)
+    const afterFirst = provider.requests.length
+    expect(afterFirst).toBeGreaterThan(0)
+
+    const second = await run()
+    expect(second.reused).toBe(true)
+    expect(second.discoveryId).toBe(first.discoveryId)
+    expect(second.concerns).toEqual(first.concerns)
+    // The whole point: not one extra call.
+    expect(provider.requests.length).toBe(afterFirst)
+    // And no cost reported for work that was not done — charging it twice would make a cohort
+    // look twice as expensive as it was.
+    expect(second.costUsd).toBe(0)
+  })
+
+  it('re-describes when FORCED, because an organiser asking again means they doubt it', async () => {
+    provider.setResponder(discoveryResponder())
+    const first = await run()
+    const afterFirst = provider.requests.length
+
+    const forced = await inScope(() => discoverSubmission({
+      submissionId, actor: ACTOR, force: true,
+    }))
+    expect(forced.reused).toBe(false)
+    // A new run, not the old one handed back.
+    expect(forced.discoveryId).not.toBe(first.discoveryId)
+    expect(provider.requests.length).toBeGreaterThan(afterFirst)
+  })
+
+  it('does NOT reuse a description of a DIFFERENT commit — the code has changed', async () => {
+    provider.setResponder(discoveryResponder())
+    const first = await run()
+    const afterFirst = provider.requests.length
+
+    // The team pushed and resubmitted: same submission row, scanned again at a new commit.
+    // The commit the services compare lives in the stored scan RESULT, not in the column
+    // beside it, so a fresh scan is what makes this case real.
+    await query('DELETE FROM scan WHERE submission_id = $1', [submissionId])
+    await seedScan(submissionId, scanResult(DISCOVERY_SOURCE, { commitSha: 'b'.repeat(40) }))
+
+    const second = await run()
+    expect(second.reused).toBe(false)
+    expect(second.discoveryId).not.toBe(first.discoveryId)
+    expect(provider.requests.length).toBeGreaterThan(afterFirst)
   })
 })

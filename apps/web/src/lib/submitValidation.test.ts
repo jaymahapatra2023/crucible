@@ -53,6 +53,27 @@ describe('what is only a warning', () => {
     expect(submissionProblems(draft({ buildCommand }), 'tok')).toEqual([])
   })
 
+  it('catches PROSE WITH NO COLONS, which the first version let through', () => {
+    // Verbatim from a third entry. No label, no newline, and a first word that looks like a
+    // program, so every rule written for the previous team missed it.
+    const buildCommand = 'select the index.html inside of the lifemap-ai folder, '
+      + 'then run "npm run api"'
+    expect(submissionWarnings(draft({ buildCommand })).join(' '))
+      .toMatch(/looks like instructions rather than one command/)
+  })
+
+  it('needs TWO English words, so an honestly-named path does not trip it', () => {
+    // One such word can appear in a real command; a sentence has several.
+    for (const buildCommand of [
+      'cd the-api && npm start',
+      'node open-server.js',
+      'python select_rows.py',
+      'npm run build --prefix your-app',
+    ]) {
+      expect(submissionWarnings(draft({ buildCommand })), buildCommand).toEqual([])
+    }
+  })
+
   it('catches a label as the very first word, and a command spread over lines', () => {
     expect(submissionWarnings(draft({ buildCommand: 'Start: npm start' })).join(' '))
       .toMatch(/looks like instructions/)
