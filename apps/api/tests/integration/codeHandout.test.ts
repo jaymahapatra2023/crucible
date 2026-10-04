@@ -4,6 +4,11 @@
  * Registration no longer carries the code, so something has to. What matters here is that it
  * reaches exactly the teams that have registered and not yet been sent it, that running it twice
  * does not mean two emails, and that an unclaimed slot is not treated as a team with a problem.
+ *
+ * And that it reaches THE TEAM. The first real run of this at the event sent thirty messages to
+ * thirty registrants and left eighty-six team members without the code — because the query read
+ * `contact_email` and nothing else, and one person per team registers by design. The last tests
+ * here are that gap, pinned.
  */
 import { beforeEach, describe, expect, it } from 'vitest'
 import { resetDatabase } from '../setup/integrationSetup.js'
@@ -171,5 +176,71 @@ describe('handing out the codes', () => {
     expect(text).toMatch(/"teams":1/)
     expect(text).not.toMatch(/crs_/)
     expect(text).not.toMatch(/@/)
+  })
+
+  it('copies EVERY teammate on the one message — the code belongs to the team', async () => {
+    // The gap that mattered at the event: one registrant per team by design, so addressing
+    // `contact_email` alone made a team's ability to submit depend on one person reading mail.
+    await register('Night Shift', 'ada@example.test', ['grace@example.test', 'alan@example.test'])
+    sent.length = 0
+
+    const plan = await inScope(() => handOutCodes({ confirm: true, actor: ACTOR }))
+    expect(plan.rows[0]).toMatchObject({ copiedTo: 2 })
+    expect(sent).toHaveLength(1)
+    expect(sent[0]!.to).toBe('ada@example.test')
+    expect([...sent[0]!.copyTo ?? []].sort())
+      .toEqual(['alan@example.test', 'grace@example.test'])
+  })
+
+  it('counts PEOPLE in the audit trail, not just teams', async () => {
+    await register('Night Shift', 'ada@example.test', ['grace@example.test', 'alan@example.test'])
+    await inScope(() => handOutCodes({ confirm: true, actor: ACTOR }))
+
+    const audit = await query<{ payload: { teams: number; recipients: number } }>(
+      "SELECT payload FROM audit_event WHERE action = 'submissions.codes_handed_out'")
+    // One team, three people. A trail that only recorded "teams: 1" is what let this pass
+    // unnoticed for a whole send.
+    expect(audit.rows[0]!.payload).toMatchObject({ teams: 1, recipients: 3 })
+  })
+
+  it('does not copy a teammate who has been removed from the roster', async () => {
+    // Somebody leaves mid-event and is taken off the roster. Their address must stop receiving
+    // the team's credential — and the rest of the team must still get it.
+    await register('Night Shift', 'ada@example.test', ['grace@example.test', 'alan@example.test'])
+    await query(`UPDATE participant
+                    SET deleted_at = now(), deleted_by = $1, delete_reason = 'ADMIN_ACTION'
+                  WHERE email = 'alan@example.test'`, [ACTOR])
+    sent.length = 0
+
+    const plan = await inScope(() => handOutCodes({ confirm: true, actor: ACTOR }))
+    expect(plan.rows[0]).toMatchObject({ copiedTo: 1 })
+    expect(sent[0]!.copyTo).toEqual(['grace@example.test'])
+  })
+
+  it('RE-SENDS to a team already sent when asked, so a short send can be put right', async () => {
+    await register('Night Shift', 'ada@example.test', ['grace@example.test', 'alan@example.test'])
+    await inScope(() => handOutCodes({ confirm: true, actor: ACTOR }))
+    sent.length = 0
+
+    const plan = await inScope(() => handOutCodes({ confirm: true, resend: true, actor: ACTOR }))
+    expect(plan.summary).toMatchObject({ waiting: 1, alreadySent: 0 })
+    expect(plan.rows[0]!.detail).toMatch(/sent again with 2 teammates copied/)
+    expect(sent).toHaveLength(1)
+    expect([...sent[0]!.copyTo ?? []].sort())
+      .toEqual(['alan@example.test', 'grace@example.test'])
+  })
+
+  it('gives a re-send its OWN idempotency key, or Discord would discard it as a duplicate', async () => {
+    await register('Night Shift', 'ada@example.test', ['grace@example.test', 'alan@example.test'])
+    await inScope(() => handOutCodes({ confirm: true, actor: ACTOR }))
+    const first = sent[sent.length - 1]!.idempotencyKey
+
+    await inScope(() => handOutCodes({ confirm: true, resend: true, actor: ACTOR }))
+    const second = sent[sent.length - 1]!.idempotencyKey
+    expect(second).not.toBe(first)
+
+    // But FIXED, not a timestamp: asking for the same correction twice is still one message.
+    await inScope(() => handOutCodes({ confirm: true, resend: true, actor: ACTOR }))
+    expect(sent[sent.length - 1]!.idempotencyKey).toBe(second)
   })
 })

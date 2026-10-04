@@ -15,6 +15,13 @@ import { handOutCodes } from '../services/codeHandout.js'
 const handoutBody = z.object({
   /** False shows what would be sent and sends nothing — the same shape as every bulk path here. */
   confirm: z.boolean().default(false),
+  /**
+   * Send again to teams already sent, with the whole team copied.
+   *
+   * Defaults to false so the ordinary call cannot re-mail a code to a hundred people by
+   * accident. An organiser asks for it when a send reached the wrong set of recipients.
+   */
+  resend: z.boolean().default(false),
 })
 
 export async function registerCodeHandoutRoutes(app: FastifyInstance): Promise<void> {
@@ -24,6 +31,8 @@ export async function registerCodeHandoutRoutes(app: FastifyInstance): Promise<v
    */
   app.post('/api/v1/submissions/codes/hand-out', { preHandler: requireRole('organiser') }, async (req) => {
     const input = body(req, handoutBody)
-    return ok(await handOutCodes({ confirm: input.confirm, actor: principalOf(req).email }))
+    return ok(await handOutCodes({
+      confirm: input.confirm, resend: input.resend, actor: principalOf(req).email,
+    }))
   })
 }

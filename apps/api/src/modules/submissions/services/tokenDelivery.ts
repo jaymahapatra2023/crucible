@@ -34,15 +34,35 @@ export interface Deliverable {
   tokenId: number
   teamName: string
   contactEmail: string
+  /**
+   * The rest of the team, copied on the same message.
+   *
+   * A submission code belongs to the team, not to whoever happened to fill in the form. The
+   * first handout addressed `contact_email` alone, which put the code in one inbox out of four
+   * and made a team's ability to submit depend on one person reading their mail — and on a
+   * Saturday night, with one registrant per team by design, that is a single point of failure
+   * with a deadline attached.
+   */
+  copyTo?: readonly string[]
   /** DM target, when the team gave one (E49). Email carries it otherwise, or after a refusal. */
   discordUserId?: string | null
   /** The plaintext, for this call only. Never stored, never logged. */
   token: string
+  /**
+   * Distinguishes a deliberate second send from a retry of the first.
+   *
+   * The idempotency key is what makes a retry safe: Discord derives its `enforce_nonce` from it
+   * and SMTP its Message-ID. That is exactly why a re-send has to change it — reusing the key
+   * would have Discord silently discard the message as a duplicate it has already handled.
+   * A FIXED suffix, not a timestamp: running the same re-send twice must still be one message.
+   */
+  idempotencySuffix?: string | null
 }
 
 export interface PreparedMessage {
   teamName: string
   to: string
+  copyTo: readonly string[]
   subject: string
   body: string
   idempotencyKey: string
@@ -167,6 +187,7 @@ const record = (input: {
  * teams will read without a deploy, and the version that produced each message is recorded.
  */
 async function compose(item: Deliverable, submitUrl: string): Promise<PreparedMessage> {
+  const suffix = item.idempotencySuffix ?? ''
   const rendered = await renderMail('mail.token_issued', {
     team_name: item.teamName,
     token: item.token,
@@ -177,10 +198,13 @@ async function compose(item: Deliverable, submitUrl: string): Promise<PreparedMe
   return {
     teamName: item.teamName,
     to: item.contactEmail,
+    // Blank addresses dropped rather than handed to the relay: one empty string in the Cc is
+    // enough for some relays to reject the whole message, which would cost the team the code.
+    copyTo: (item.copyTo ?? []).filter((e) => e.trim() !== ''),
     subject: rendered.subject,
     body: rendered.body,
     // Stable across retries, so a timeout can be retried without delivering twice (E43).
-    idempotencyKey: `token-issued/${item.tokenId}`,
+    idempotencyKey: `token-issued/${item.tokenId}${suffix === '' ? '' : `/${suffix}`}`,
     templateVersion: rendered.templateVersion,
   }
 }

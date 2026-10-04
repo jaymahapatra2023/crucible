@@ -35,6 +35,8 @@ export interface HandoutRow {
   teamId: number
   teamName: string
   contactEmail: string
+  /** How many teammates are copied. A 1 here means the code reaches one person — read it. */
+  copiedTo: number
   /** WAITING: has a code, not yet sent it. SENT: already had it. BLOCKED: cannot be sent. */
   state: 'WAITING' | 'SENT' | 'BLOCKED'
   /** Why it is blocked, in words an organiser can act on. */
@@ -51,6 +53,8 @@ export interface HandoutPlan {
 interface Row {
   team_id: number; display_name: string; contact_email: string
   contact_discord_user_id: string | null; token_id: number | null; sent: boolean
+  /** Every other member's address, so the code reaches the team and not just the registrant. */
+  copy_emails: string[]
 }
 
 /**
@@ -71,7 +75,15 @@ async function registeredTeams(): Promise<Row[]> {
     `SELECT t.team_id, t.display_name, t.contact_email, t.contact_discord_user_id,
             a.token_id,
             EXISTS (SELECT 1 FROM token_delivery d
-                     WHERE d.team_id = t.team_id AND d.status = 'SENT') AS sent
+                     WHERE d.team_id = t.team_id AND d.status = 'SENT') AS sent,
+            COALESCE((SELECT array_agg(DISTINCT p.email)
+                        FROM team_member m
+                        JOIN participant p ON p.participant_id = m.participant_id
+                       WHERE m.team_id = t.team_id
+                         AND p.deleted_at IS NULL
+                         AND p.email <> ''
+                         AND lower(p.email) <> lower(t.contact_email)),
+                     '{}') AS copy_emails
        FROM team t
        JOIN access_token a
               ON a.team_id = t.team_id AND a.kind = 'SUBMISSION'
@@ -81,12 +93,12 @@ async function registeredTeams(): Promise<Row[]> {
   return res.rows
 }
 
-function classify(row: Row): HandoutRow {
+function classify(row: Row, resend = false): HandoutRow {
   const base = {
     teamId: Number(row.team_id), teamName: row.display_name,
-    contactEmail: row.contact_email,
+    contactEmail: row.contact_email, copiedTo: row.copy_emails.length,
   }
-  if (row.sent) {
+  if (row.sent && !resend) {
     return { ...base, state: 'SENT', detail: 'Already sent its code. Not sent again.' }
   }
   if (row.token_id === null) {
@@ -104,16 +116,33 @@ function classify(row: Row): HandoutRow {
       detail: 'No contact address on this team, so there is nowhere to send it.',
     }
   }
+  if (row.sent) {
+    return {
+      ...base, state: 'WAITING',
+      detail: `Already sent to the registrant. Will be sent again with ${base.copiedTo} `
+        + `teammate${base.copiedTo === 1 ? '' : 's'} copied.`,
+    }
+  }
   return { ...base, state: 'WAITING', detail: null }
 }
 
 export async function handOutCodes(input: {
   confirm: boolean
   actor: string
+  /**
+   * Send again to teams already sent, so a message that went to too few people can be put right.
+   *
+   * Off by default, because the ordinary mistake is running the handout twice and mailing ninety
+   * people a code they already have. It is on only when an organiser asks for it, and even then
+   * the re-send is itself idempotent: the key carries a fixed suffix, so asking twice is one
+   * message, not two.
+   */
+  resend?: boolean
 }): Promise<HandoutPlan> {
+  const resend = input.resend ?? false
   const teams = await registeredTeams()
-  const rows = teams.map(classify)
-  const waiting = teams.filter((t) => classify(t).state === 'WAITING')
+  const rows = teams.map((t) => classify(t, resend))
+  const waiting = teams.filter((t) => classify(t, resend).state === 'WAITING')
 
   const summarise = (report: DeliveryReport | null): HandoutPlan => ({
     rows,
@@ -141,7 +170,11 @@ export async function handOutCodes(input: {
     deliverables.push({
       teamId: Number(team.team_id), tokenId: Number(team.token_id),
       teamName: team.display_name, contactEmail: team.contact_email,
+      copyTo: team.copy_emails,
       discordUserId: team.contact_discord_user_id, token: reveal.token,
+      // Only on a re-send. The first send keeps the bare key, so an interrupted first run still
+      // retries safely into the same message.
+      idempotencySuffix: resend && team.sent ? 'team-copy' : null,
     })
   }
 
@@ -169,6 +202,10 @@ export async function handOutCodes(input: {
       teams: deliverables.length,
       sent: outcomes.filter((o) => o.status === 'SENT').length,
       failed: outcomes.filter((o) => o.status === 'FAILED').length,
+      // How many people the codes actually reached, which is the number that was wrong the
+      // first time this ran: thirty messages, thirty readers, a hundred and sixteen members.
+      recipients: deliverables.reduce((n, d) => n + 1 + (d.copyTo?.length ?? 0), 0),
+      resend,
     },
   })
 

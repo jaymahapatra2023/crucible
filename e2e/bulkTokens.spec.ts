@@ -32,7 +32,9 @@ const FILE = [
 ].join('\n')
 
 async function paste(page: Page, text: string) {
-  await page.getByLabel('Teams').fill(text)
+  // Exact, because the intake page carries other controls whose names mention teams. A
+  // substring match here would quietly start resolving to whichever was added most recently.
+  await page.getByLabel('Teams', { exact: true }).fill(text)
 }
 
 test.describe('checking before registering', () => {

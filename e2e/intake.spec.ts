@@ -247,3 +247,33 @@ test.describe('the links participants use, and who is not there yet (E50)', () =
     await expect(page.getByRole('heading', { name: /Not there yet/ })).toBeVisible()
   })
 })
+
+test.describe('the code handout (migration 103)', () => {
+  /*
+   * Walked here because the first real handout at the event reached one person per team: the
+   * query read `contact_email` and one member registers per team by design. The panel now
+   * reports PEOPLE, and the control that corrects a short send is the same control that could
+   * re-mail a credential to everyone — so what matters on screen is that it is OFF by default.
+   */
+  test('reports who is waiting without sending anything', async ({ page }) => {
+    await signIn(page)
+    await page.goto('/intake')
+
+    await expect(page.getByRole('heading', { name: 'Send the submission codes' })).toBeVisible()
+    await page.getByRole('button', { name: 'Check who is waiting' }).click()
+
+    // A count, whatever it is — the check reads state and writes none.
+    await expect(page.getByTestId('handout-waiting')).toBeVisible()
+    await expect(page.getByText(/registered teams have not been sent their code/)).toBeVisible()
+  })
+
+  test('the re-send is OFF until an organiser asks for it', async ({ page }) => {
+    await signIn(page)
+    await page.goto('/intake')
+
+    const resend = page.getByLabel(/Send again to teams already sent/)
+    await expect(resend).not.toBeChecked()
+    await resend.check()
+    await expect(resend).toBeChecked()
+  })
+})

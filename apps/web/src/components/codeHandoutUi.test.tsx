@@ -3,6 +3,10 @@
  *
  * What matters: the waiting count is the primary signal, a blocked team is named in words with
  * the reason, and the send button is absent below organiser rather than present and refusing.
+ *
+ * And — added after the first real send reached thirty registrants instead of a hundred and
+ * sixteen team members — that the panel reports PEOPLE, and names any team whose code would
+ * reach one inbox. "30 teams" read as success. It was not.
  */
 import { describe, expect, it, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
@@ -41,7 +45,7 @@ describe('the code handout panel', () => {
     render(<CodeHandoutPanel {...props} plan={plan({
       summary: { total: 2, waiting: 1, alreadySent: 0, blocked: 1 },
       rows: [{
-        teamId: 7, teamName: 'Night Shift', contactEmail: '', state: 'BLOCKED',
+        teamId: 7, teamName: 'Night Shift', contactEmail: '', copiedTo: 0, state: 'BLOCKED',
         detail: 'No contact address on this team, so there is nowhere to send it.',
       }],
     })} />)
@@ -79,5 +83,56 @@ describe('the code handout panel', () => {
       report: { provider: 'record', sends: false, outcomes: [], messages: [] },
     })} />)
     expect(screen.getByRole('status')).toHaveTextContent(/nothing left this machine/)
+  })
+
+  it('reports PEOPLE as well as teams — the count that was wrong the first time', () => {
+    render(<CodeHandoutPanel {...props} plan={plan({
+      summary: { total: 2, waiting: 2, alreadySent: 0, blocked: 0 },
+      rows: [
+        { teamId: 1, teamName: 'Ada', contactEmail: 'a@x.test', copiedTo: 3, state: 'WAITING', detail: null },
+        { teamId: 2, teamName: 'Bell', contactEmail: 'b@x.test', copiedTo: 2, state: 'WAITING', detail: null },
+      ],
+    })} />)
+    // 2 registrants + 5 teammates. A panel that only said "2 teams" is what hid the problem.
+    expect(screen.getByTestId('handout-people')).toHaveTextContent('7 people')
+    expect(screen.getByRole('button', { name: 'Send to 2 teams · 7 people' })).toBeEnabled()
+  })
+
+  it('NAMES a team whose code would reach only one person', () => {
+    render(<CodeHandoutPanel {...props} plan={plan({
+      summary: { total: 2, waiting: 2, alreadySent: 0, blocked: 0 },
+      rows: [
+        { teamId: 1, teamName: 'Ada', contactEmail: 'a@x.test', copiedTo: 3, state: 'WAITING', detail: null },
+        { teamId: 2, teamName: 'Solo', contactEmail: 'b@x.test', copiedTo: 0, state: 'WAITING', detail: null },
+      ],
+    })} />)
+    const list = screen.getByRole('list', { name: 'Teams where the code reaches only one person' })
+    expect(list).toHaveTextContent('Solo')
+    expect(list).not.toHaveTextContent('Ada')
+  })
+
+  it('does not offer a re-send below organiser', () => {
+    render(<CodeHandoutPanel {...props} canSend={false} plan={null} />)
+    expect(screen.queryByLabelText(/Send again to teams already sent/)).not.toBeInTheDocument()
+  })
+
+  it('passes the re-send choice through to both the check and the send', async () => {
+    const onCheck = vi.fn()
+    const onSend = vi.fn()
+    const user = userEvent.setup()
+    render(<CodeHandoutPanel
+      {...props} onCheck={onCheck} onSend={onSend}
+      plan={plan({
+        summary: { total: 1, waiting: 1, alreadySent: 0, blocked: 0 },
+        rows: [{ teamId: 1, teamName: 'Ada', contactEmail: 'a@x.test', copiedTo: 3, state: 'WAITING', detail: null }],
+      })}
+    />)
+    // Off by default: the ordinary press must not re-mail a code to a hundred people.
+    await user.click(screen.getByRole('button', { name: 'Check who is waiting' }))
+    expect(onCheck).toHaveBeenLastCalledWith(false)
+
+    await user.click(screen.getByLabelText(/Send again to teams already sent/))
+    await user.click(screen.getByRole('button', { name: /^Send to 1 team/ }))
+    expect(onSend).toHaveBeenLastCalledWith(true)
   })
 })

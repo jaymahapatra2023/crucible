@@ -308,9 +308,11 @@ export function IntakePage() {
 
       <CodeHandoutPanel
         plan={handout} busy={busy} canSend={organiser}
-        onCheck={() => void act(async () => { setHandout(await handOutCodes(false)) })}
-        onSend={() => void act(async () => {
-          setHandout(await handOutCodes(true))
+        onCheck={(resend: boolean) => void act(async () => {
+          setHandout(await handOutCodes(false, resend))
+        })}
+        onSend={(resend: boolean) => void act(async () => {
+          setHandout(await handOutCodes(true, resend))
           setReloadKey((k) => k + 1)
         })}
       />
