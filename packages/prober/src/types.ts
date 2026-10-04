@@ -6,6 +6,8 @@
  * acceptance 3), so these types describe observations, never judgements.
  */
 
+import type { SandboxBlock } from './sandboxSignatures.js'
+
 export const BUILD_METHODS = ['DOCKERFILE', 'COMMAND'] as const
 export type BuildMethod = (typeof BUILD_METHODS)[number]
 
@@ -28,6 +30,13 @@ export const PROBE_OUTCOMES = [
   'RESOURCE_EXCEEDED',
   /** The harness itself failed. Never counted against the submission. */
   'PROBE_ERROR',
+  /**
+   * It started, then stopped because the sandbox denied something ordinary — the network, a
+   * write outside its own directory, a read-only path. Graded one point below RUNS: the
+   * environment caused it, but the team declared a build that does not start in a documented
+   * environment. See `sandboxSignatures.ts`.
+   */
+  'SANDBOX_BLOCKED',
 ] as const
 export type ProbeOutcome = (typeof PROBE_OUTCOMES)[number]
 
@@ -84,9 +93,19 @@ export interface ProbeResult {
   baseImage: string | null
   /** Set when the harness failed, as distinct from the submission failing. */
   probeError: string | null
+  /**
+   * Set when the containment stopped the application, as distinct from either of those.
+   *
+   * Its own field rather than a reason stuffed into `probeError`: that one means "we could not
+   * tell", which excludes the dimension entirely. This one means "we could tell, and the
+   * environment is why", which costs a point. Collapsing them would silently turn a deduction
+   * into an exemption.
+   */
+  sandboxBlock: SandboxBlock | null
   ranAt: string
   totalDurationMs: number
 }
 
-/** The four states E05-S04 acceptance 2 derives the dimension score from. */
-export type RunsGrade = 'RUNS' | 'BUILDS_ONLY' | 'FAILS_TO_BUILD' | 'UNSUPPORTED'
+/** The states E05-S04 acceptance 2 derives the dimension score from. */
+export type RunsGrade =
+  | 'RUNS' | 'BLOCKED_BY_SANDBOX' | 'BUILDS_ONLY' | 'FAILS_TO_BUILD' | 'UNSUPPORTED'

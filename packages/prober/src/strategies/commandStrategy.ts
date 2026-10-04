@@ -30,6 +30,7 @@ import { promisify } from 'node:util'
 import { docker, forceRemove, removeImage } from '../containerRuntime.js'
 import { baseImageFor, supportedLanguages } from '../baseImages.js'
 import { containmentArgs } from '../sandboxPolicy.js'
+import { sandboxBlockedBy } from '../sandboxSignatures.js'
 import { emptyResult, hitResourceLimit, withLog, type ProbeContext, type ProbeStrategy } from './probeContract.js'
 import type { ProbeInput, ProbeResult } from '../types.js'
 
@@ -162,6 +163,15 @@ export const commandStrategy: ProbeStrategy = {
       return withLog({ result, buildOutput: output, runOutput: '', capBytes: input.policy.logCapBytes, startedAt: started })
     }
     if (startOutcome.exitCode !== 0) {
+      // Checked BEFORE calling it a failed build. The declared command is the team's, but the
+      // network it cannot reach and the directories it cannot write are ours, and the first
+      // real entry of the event failed on exactly this.
+      const blocked = sandboxBlockedBy(output)
+      if (blocked) {
+        result.sandboxBlock = blocked
+        result.outcome = 'SANDBOX_BLOCKED'
+        return withLog({ result, buildOutput: output, runOutput: '', capBytes: input.policy.logCapBytes, startedAt: started })
+      }
       result.outcome = 'BUILD_FAILED'
       return withLog({ result, buildOutput: output, runOutput: '', capBytes: input.policy.logCapBytes, startedAt: started })
     }

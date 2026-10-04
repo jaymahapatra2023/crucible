@@ -53,6 +53,18 @@ describe('build and run, from one probe', () => {
     expect(run.remedy).toMatch(/environment variable|port/)
   })
 
+  it('tells a team the SANDBOX stopped it, and that the scoring already allows for that', () => {
+    // The distinction that matters to a team reading this at two in the morning: it failed,
+    // there is something they can do, and they are not being marked down for our environment.
+    const [build, run] = probeChecks(
+      facts({ outcome: 'SANDBOX_BLOCKED', exitCode: 1, stayedUp: false }), 45)
+    expect(build.status).toBe('PASS')
+    expect(run.status).toBe('FAIL')
+    expect(run.summary).toMatch(/sandbox denied/)
+    expect(run.summary).toMatch(/one point of four, not the dimension/)
+    expect(run.remedy).toMatch(/no network access|unprivileged/)
+  })
+
   it('blames the build, not the run, when the build is what timed out', () => {
     const [build, run] = probeChecks(facts({ outcome: 'TIMED_OUT', timedOut: true, runDurationMs: 0 }), 45)
     expect(build.status).toBe('FAIL')

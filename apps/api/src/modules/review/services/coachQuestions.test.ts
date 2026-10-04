@@ -59,6 +59,23 @@ describe('what gets asked', () => {
     expect(q!.ask).toContain('run it live')
   })
 
+  it('tells a coach the sandbox stopped it WITHOUT relaying what it cost', () => {
+    // The deduction is real and it is in the review flag. It is not in what a coach says to a
+    // team across a table: that invites an argument about marks instead of a conversation
+    // about the work.
+    const [q] = coachQuestions({
+      ...empty,
+      probe: {
+        outcome: 'SANDBOX_BLOCKED',
+        gradeReason: 'It tried to reach the network ... costs one point of four ... '
+          + 'Evidence: getaddrinfo EAI_AGAIN',
+      },
+    })
+    expect(q!.because).toContain('denied the network')
+    expect(q!.because).not.toMatch(/point of four|cost|deduction|getaddrinfo/i)
+    expect(q!.ask).toContain('run it live')
+  })
+
   it('does not ask about a run that ran', () => {
     expect(coachQuestions({ ...empty, probe: { outcome: 'RUNS', gradeReason: 'Answered on :3000.' } })).toEqual([])
   })

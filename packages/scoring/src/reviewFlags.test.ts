@@ -62,3 +62,42 @@ describe('good work, wrong question (LOW_CHALLENGE_FIDELITY)', () => {
     expect(flag?.detail).toEqual({ fidelity: 20.4, threshold: 35, otherDimensionsMean: 88.2 })
   })
 })
+
+describe('the sandbox stopped it, so the system judged whose fault it was (SANDBOX_BLOCKED)', () => {
+  const flagFor = (input: Parameters<typeof buildReviewFlags>[0]) =>
+    buildReviewFlags(input).find((f) => f.code === 'SANDBOX_BLOCKED')
+
+  it('is ALWAYS raised, because a regex decided the blame and a person must be able to overrule it', () => {
+    const flag = flagFor({
+      probe: {
+        outcome: 'SANDBOX_BLOCKED', runsGrade: 'BLOCKED_BY_SANDBOX',
+        reason: 'It tried to reach the network. Evidence: getaddrinfo EAI_AGAIN',
+      },
+    })
+    expect(flag?.severity).toBe('ATTENTION')
+    expect(flag?.message).toContain('3 of 4')
+    expect(flag?.message).toContain('getaddrinfo EAI_AGAIN')
+    // Both directions, explicitly: the committee can raise it as well as lower it.
+    expect(flag?.message).toMatch(/decide whether that is the right weight/)
+  })
+
+  it('is not raised for an entry that simply ran', () => {
+    expect(flagFor({
+      probe: { outcome: 'RUNS', runsGrade: 'RUNS', reason: 'Stayed up.' },
+    })).toBeUndefined()
+  })
+
+  it('is not raised for an ordinary crash — that one needs no explaining', () => {
+    expect(flagFor({
+      probe: { outcome: 'BUILDS_ONLY', runsGrade: 'BUILDS_ONLY', reason: 'Exited at once.' },
+    })).toBeUndefined()
+  })
+
+  it('does not displace the harness caveats, which mean something different', () => {
+    const flags = buildReviewFlags({
+      probe: { outcome: 'PROBE_ERROR', runsGrade: 'UNSUPPORTED', reason: 'no docker' },
+    })
+    expect(flags.map((f) => f.code)).toContain('PROBE_ERROR')
+    expect(flags.map((f) => f.code)).not.toContain('SANDBOX_BLOCKED')
+  })
+})

@@ -12,6 +12,7 @@ import { execFile } from 'node:child_process'
 import { promisify } from 'node:util'
 import { docker, forceRemove, removeImage } from '../containerRuntime.js'
 import { containmentArgs } from '../sandboxPolicy.js'
+import { sandboxBlockedBy } from '../sandboxSignatures.js'
 import { emptyResult, hitResourceLimit, withLog, type ProbeContext, type ProbeStrategy } from './probeContract.js'
 import type { ProbeInput, ProbeResult } from '../types.js'
 
@@ -112,9 +113,18 @@ export const dockerfileStrategy: ProbeStrategy = {
     result.stayedUp = running === 'true'
     result.runDurationMs = settleMs
     result.resourceExceeded = oomKilled === 'true' || hitResourceLimit(Number(exitCode), logs.stderr)
+
+    // A container that did not stay up may have been stopped by the containment rather than by
+    // a fault of its own. Only consulted when it actually went down, and only on the RUN logs:
+    // the build has a network, so a build-time network failure is the team's to explain.
+    const blocked = result.stayedUp || result.resourceExceeded
+      ? null
+      : sandboxBlockedBy(`${logs.stdout}\n${logs.stderr}`)
+    result.sandboxBlock = blocked
+
     result.outcome = result.resourceExceeded
       ? 'RESOURCE_EXCEEDED'
-      : result.stayedUp ? 'RUNS' : 'BUILDS_ONLY'
+      : result.stayedUp ? 'RUNS' : blocked ? 'SANDBOX_BLOCKED' : 'BUILDS_ONLY'
 
     return withLog({ result, buildOutput: buildOutput, runOutput: `${logs.stdout}\n${logs.stderr}`, capBytes: input.policy.logCapBytes, startedAt: started })
   },

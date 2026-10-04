@@ -38,6 +38,7 @@ export function emptyResult(input: ProbeInput): ProbeResult {
     egressAllowed: input.policy.egressAllowList,
     baseImage: null,
     probeError: null,
+    sandboxBlock: null,
     ranAt: new Date().toISOString(),
     totalDurationMs: 0,
   }

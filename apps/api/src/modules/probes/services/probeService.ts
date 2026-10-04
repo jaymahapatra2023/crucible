@@ -123,7 +123,7 @@ export async function probeSubmission(options: ProbeOptions): Promise<ProbeOutco
       outcome: 'PROBE_ERROR', method: submission.build_method, buildExitCode: null,
       buildDurationMs: 0, stayedUp: false, runDurationMs: 0, timedOut: false,
       resourceExceeded: false, log: '', logTruncated: false, logBytes: 0,
-      egressAllowed: policy.egressAllowList, baseImage: null,
+      egressAllowed: policy.egressAllowList, baseImage: null, sandboxBlock: null,
       probeError: `The repository could not be prepared for probing: ${errorMessage(err)}`,
       ranAt: new Date().toISOString(), totalDurationMs: 0,
     }
@@ -169,6 +169,7 @@ async function persistDisabled(
     outcome: 'UNSUPPORTED_STACK', method, buildExitCode: null, buildDurationMs: 0,
     stayedUp: false, runDurationMs: 0, timedOut: false, resourceExceeded: false,
     log: '', logTruncated: false, logBytes: 0, egressAllowed: [], baseImage: null,
+    sandboxBlock: null,
     probeError: 'Build probing is disabled, so this submission was not built.',
     ranAt: new Date().toISOString(), totalDurationMs: 0,
   }

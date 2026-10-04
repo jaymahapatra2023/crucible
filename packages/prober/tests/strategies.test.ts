@@ -229,6 +229,49 @@ describe('command path (E05-S03)', () => {
     expect(result.log).toContain('made True')
   }, 300_000)
 
+  it('grades a REAL no-network failure as blocked by the sandbox, not as a failed build', async () => {
+    /*
+     * The event's first entry, reduced to its essence: a declared command that reaches the
+     * network. It cannot work and it is not their bug — the run container has no network by
+     * design. Graded 3 of 4 rather than 0.
+     *
+     * Against a real container, because the point is what the sandbox actually does, not what
+     * a fixture says it does.
+     */
+    const result = await probe({
+      repoPath: build({
+        'fetch.py': 'import urllib.request\nurllib.request.urlopen("https://pypi.org/simple/")',
+      }),
+      buildMethod: 'COMMAND', buildCommand: 'python3 fetch.py', language: 'python',
+      policy: POLICY,
+    })
+    expect(result.outcome).toBe('SANDBOX_BLOCKED')
+    expect(result.sandboxBlock?.control).toBe('NO_NETWORK')
+    expect(gradeRuns(result)).toMatchObject({ grade: 'BLOCKED_BY_SANDBOX', score: 3 })
+  }, 300_000)
+
+  it('grades a REAL unprivileged-write failure the same way', async () => {
+    const result = await probe({
+      repoPath: build({ 'w.py': 'open("/etc/crucible-probe-test", "w").write("x")' }),
+      buildMethod: 'COMMAND', buildCommand: 'python3 w.py', language: 'python',
+      policy: POLICY,
+    })
+    expect(result.outcome).toBe('SANDBOX_BLOCKED')
+    expect(result.sandboxBlock?.control).toBe('UNPRIVILEGED_USER')
+    expect(gradeRuns(result).score).toBe(3)
+  }, 300_000)
+
+  it('still grades an ORDINARY crash as a failed build — the deduction is not an amnesty', async () => {
+    const result = await probe({
+      repoPath: build({ 'bad.py': 'raise ValueError("this is the team\'s own bug")' }),
+      buildMethod: 'COMMAND', buildCommand: 'python3 bad.py', language: 'python',
+      policy: POLICY,
+    })
+    expect(result.outcome).toBe('BUILD_FAILED')
+    expect(result.sandboxBlock).toBeNull()
+    expect(gradeRuns(result)).toMatchObject({ grade: 'FAILS_TO_BUILD', score: 0 })
+  }, 300_000)
+
   it('refuses a COMMAND declaration with no command', async () => {
     const result = await probe({
       repoPath: build({ 'a.txt': 'x' }), buildMethod: 'COMMAND', language: 'python',

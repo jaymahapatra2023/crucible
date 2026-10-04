@@ -112,12 +112,20 @@ function runQuestion(probe: { outcome: string; gradeReason: string }): CoachQues
   const because: Record<string, string> = {
     BUILD_FAILED: 'The application did not build in the evaluation sandbox.',
     BUILDS_ONLY: 'The application built but exited shortly after starting.',
+    // No mention of what it cost. A coach reads this aloud to a team, and what the scoring did
+    // about it is not theirs to relay — nor the team's to argue with over a table.
+    SANDBOX_BLOCKED: 'The application started, then stopped because the evaluation sandbox '
+      + 'denied the network or a write outside its own directory.',
     TIMED_OUT: 'The application did not become ready inside the time allowed.',
     RESOURCE_EXCEEDED: 'The application exceeded the sandbox memory, CPU or process limits.',
     UNSUPPORTED_STACK: 'The evaluation could not build this stack, so nothing was observed running.',
     PROBE_ERROR: 'The evaluation harness could not attempt to run it — not the team\'s doing.',
   }
+  // The environment caused it, so the grade reason — which quotes a log line and explains a
+  // deduction — is not appended, and the ask is the open one rather than "what did you leave
+  // out of your build".
   const harness = probe.outcome === 'UNSUPPORTED_STACK' || probe.outcome === 'PROBE_ERROR'
+    || probe.outcome === 'SANDBOX_BLOCKED'
   return {
     topic: 'RUN',
     because: `${because[probe.outcome] ?? ''} ${harness ? '' : brief(probe.gradeReason)}`.trim(),

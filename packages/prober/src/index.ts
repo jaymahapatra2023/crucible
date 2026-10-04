@@ -7,6 +7,7 @@
  */
 export * from './types.js'
 export * from './sandboxPolicy.js'
+export * from './sandboxSignatures.js'
 export * from './baseImages.js'
 export * from './logCapture.js'
 export * from './containerRuntime.js'

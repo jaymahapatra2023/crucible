@@ -190,6 +190,25 @@ function probeFlag(probe: FlagInputs['probe']): ReviewFlag | null {
     }
   }
 
+  if (probe.outcome === 'SANDBOX_BLOCKED') {
+    // Raised every time, because this is the one runs outcome where the system has made a
+    // judgement about WHOSE fault it was. That judgement is a regex over the container's
+    // output, it is occasionally going to be wrong, and the committee can overrule it either
+    // way — up to full marks if the application is plainly fine, down if the team ignored a
+    // documented constraint. What it must not do is pass unseen.
+    return {
+      code: 'SANDBOX_BLOCKED',
+      severity: 'ATTENTION',
+      message:
+        `This entry started and then stopped because the sandbox denied something it needed, `
+        + `rather than because of a fault in the work: ${probe.reason} It was scored 3 of 4 on `
+        + `the Runs dimension instead of 0 — a deduction for declaring a build that does not `
+        + `start in the published environment, not a mark against the application. Read the `
+        + `evidence quoted above and decide whether that is the right weight for this case.`,
+      detail: { outcome: probe.outcome, runsGrade: probe.runsGrade },
+    }
+  }
+
   if (probe.outcome === 'PROBE_ERROR') {
     return {
       code: 'PROBE_ERROR',

@@ -174,6 +174,30 @@ describe('grading is deterministic (E05-S04 acceptance 2 and 3)', () => {
     expect(probe.grade_reason).toMatch(/exit code 3/)
   })
 
+  it('grades a SANDBOX-caused stop as 3 of 4, and stores the reason a reviewer reads', async () => {
+    // The event's first entry: a declared command that reaches the network, which the run
+    // container does not have. Stored as a deduction rather than a failure, and the figure a
+    // human sees — 3, not 0 — is the whole point of the row.
+    scriptRuntime({ buildExit: 1, stdout: 'npm error code EAI_AGAIN\nnpm error syscall getaddrinfo' })
+    const { probe } = await inScope(() => probeSubmission({ submissionId }))
+    expect(probe.outcome).toBe('SANDBOX_BLOCKED')
+    expect(probe.runs_grade).toBe('BLOCKED_BY_SANDBOX')
+    expect(probe.runs_score).toBe(3)
+    expect(probe.grade_reason).toMatch(/tried to reach the network/)
+    expect(probe.grade_reason).toMatch(/one point of four/)
+
+    // And the dimension the scorer reads agrees with the stored row.
+    const dimension = await runsDimensionInput(submissionId)
+    expect(dimension).toMatchObject({ grade: 'BLOCKED_BY_SANDBOX', score: 3 })
+  })
+
+  it('still grades the team’s OWN crash as zero — the deduction is not an amnesty', async () => {
+    scriptRuntime({ buildExit: 1, stdout: 'TypeError: undefined is not a function' })
+    const { probe } = await inScope(() => probeSubmission({ submissionId }))
+    expect(probe.outcome).toBe('BUILD_FAILED')
+    expect(probe.runs_score).toBe(0)
+  })
+
   it('grades a timeout as FAILS_TO_BUILD', async () => {
     scriptRuntime({ timedOut: true })
     const { probe } = await inScope(() => probeSubmission({ submissionId }))

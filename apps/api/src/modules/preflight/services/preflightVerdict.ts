@@ -109,6 +109,23 @@ export function probeChecks(p: ProbeFacts, settleSeconds: number): [CheckRecord,
         check('build', 'PASS', 'The build completed.'),
         check('run', 'PASS', `The application started and stayed up for ${settleSeconds} seconds.`),
       ]
+    case 'SANDBOX_BLOCKED':
+      // FAIL, with the sting taken out in the words. The statuses here are PASS, FAIL and
+      // UNKNOWN; UNKNOWN would be untrue (we watched it start and stop) and would hide
+      // something the team can still fix. So it fails the check and the summary says, in the
+      // same breath, that the scoring already allows for it.
+      return [
+        check('build', 'PASS', 'The build completed.'),
+        check('run', 'FAIL',
+          'The application started and then stopped because the evaluation sandbox denied '
+          + 'something it needed — the network, or a write outside its own directory. Scoring '
+          + 'treats this as mostly ours: it costs one point of four, not the dimension.', {
+            remedy: 'It runs with no network access and as an unprivileged user, so anything it '
+              + 'fetches or installs has to happen at build time, and anything it writes has to '
+              + 'be inside its own directory. Scoring allows for this; fixing it still scores '
+              + 'better.',
+          }),
+      ]
     case 'BUILDS_ONLY':
       return [
         check('build', 'PASS', 'The build completed.'),

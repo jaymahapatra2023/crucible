@@ -12,6 +12,7 @@
 import { randomUUID } from 'node:crypto'
 import { runtimeAvailable } from './containerRuntime.js'
 import { assertPolicySafe, DEFAULT_POLICY } from './sandboxPolicy.js'
+import { describeBlock } from './sandboxSignatures.js'
 import { strategyFor } from './strategies/strategyRegistry.js'
 import { emptyResult } from './strategies/probeContract.js'
 import type { ProbeInput, ProbeResult, RunsGrade } from './types.js'
@@ -84,6 +85,16 @@ export function gradeRuns(result: ProbeResult): { grade: RunsGrade; score: numbe
       return {
         grade: 'RUNS', score: 4,
         reason: `Built and stayed up for the settle period (exit code ${result.buildExitCode ?? 0}).`,
+      }
+    case 'SANDBOX_BLOCKED':
+      // Three of four, which is 75 of 100 after `toHundred`. A deduction, not an exemption:
+      // the environment is documented, and a build that does not start in it is still the
+      // team's to own — but it is nothing like the crash that BUILDS_ONLY describes.
+      return {
+        grade: 'BLOCKED_BY_SANDBOX', score: 3,
+        reason: result.sandboxBlock
+          ? describeBlock(result.sandboxBlock)
+          : 'The sandbox denied something the application needed.',
       }
     case 'BUILDS_ONLY':
       return {

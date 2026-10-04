@@ -12,6 +12,8 @@ import type { TeamDetail } from '../lib/reviewApi.js'
 const GRADE_TEXT: Record<string, string> = {
   RUNS: 'Built and stayed up.',
   BUILDS_ONLY: 'Built successfully; whether it stays up was not observed.',
+  BLOCKED_BY_SANDBOX: 'Started, then stopped because the sandbox denied the network or a write '
+    + 'outside its own directory. Scored 3 of 4 rather than 0 — the environment caused it.',
   BUILD_FAILED: 'The build failed.',
   UNSUPPORTED_STACK: 'Crucible has no recipe for this stack, so it was never built.',
   PROBE_ERROR: 'The harness failed while probing, so this is unknown.',
