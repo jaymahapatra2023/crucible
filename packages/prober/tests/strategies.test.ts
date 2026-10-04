@@ -261,6 +261,20 @@ describe('command path (E05-S03)', () => {
     expect(gradeRuns(result).score).toBe(3)
   }, 300_000)
 
+  /*
+   * There is NO real-container test for the inference path, deliberately.
+   *
+   * One was written: a declared `npm install` against a sealed container. It passed, and it cost
+   * seventy seconds — npm retries DNS for over a minute before giving up — while holding a
+   * container the whole time. Added to a suite that already runs containers it starved an
+   * unrelated API test until it timed out at fifteen minutes, which is a worse outcome than the
+   * coverage was worth.
+   *
+   * The inference needs no container to prove: it is a function of the declared command and the
+   * egress list, and `sandboxSignatures.test.ts` covers every package manager in milliseconds.
+   * What containers are needed for is the containment itself, which the tests above exercise
+   * with commands that fail instantly.
+   */
   it('still grades an ORDINARY crash as a failed build — the deduction is not an amnesty', async () => {
     const result = await probe({
       repoPath: build({ 'bad.py': 'raise ValueError("this is the team\'s own bug")' }),

@@ -7,7 +7,7 @@
  * because then nothing is ever graded as failing and the dimension measures nothing.
  */
 import { describe, expect, it } from 'vitest'
-import { describeBlock, sandboxBlockedBy } from './sandboxSignatures.js'
+import { describeBlock, needsNetwork, sandboxBlockedBy } from './sandboxSignatures.js'
 
 describe('what the sandbox denied', () => {
   it('catches the no-network failure that cost the event its first entry', () => {
@@ -75,6 +75,36 @@ describe('what the sandbox denied', () => {
 
     const long = sandboxBlockedBy(`Could not resolve host: ${'a'.repeat(900)}`)
     expect(long!.evidence.length).toBeLessThanOrEqual(300)
+  })
+
+  it('knows which declared commands CANNOT work offline, whatever they print', () => {
+    // The case that drove this: npm, with no network, reports "Exit handler never called!" and
+    // blames itself. No DNS message, no errno — nothing a pattern catches. A real entry was
+    // graded zero for it, so the rule reasons from the command instead of the output.
+    expect(sandboxBlockedBy('npm error Exit handler never called!')).toBeNull()
+    expect(needsNetwork('cd frontend && npm ci && npm run dev')).toBe('npm ci')
+    expect(needsNetwork('.venv/bin/pip install -r requirements.txt')).toBe('pip install')
+    expect(needsNetwork('yarn install && yarn start')).toBe('yarn install')
+    expect(needsNetwork('go mod download && go run .')).toBe('go mod download')
+    expect(needsNetwork('./gradlew bootRun')).toBe('gradlew')
+    expect(needsNetwork('bundle install && rails s')).toBe('bundle install')
+    expect(needsNetwork('dotnet restore && dotnet run')).toBe('dotnet restore')
+  })
+
+  it('does NOT claim a command needs the network when it plainly does not', () => {
+    // Vendored dependencies, a committed build, a plain start — these can succeed offline, so
+    // a failure really is the team's and must still grade zero.
+    for (const command of [
+      'node server.js',
+      'npm start',
+      'npm run build',
+      'python -m uvicorn app.main:app --host 0.0.0.0 --port 8000',
+      './gradlew --offline bootRun'.replace('./gradlew', 'java -jar build/app.jar'),
+      'make run',
+      'go run .',
+    ]) {
+      expect(needsNetwork(command), command).toBeNull()
+    }
   })
 
   it('explains the deduction in words a team and a reviewer read the same way', () => {

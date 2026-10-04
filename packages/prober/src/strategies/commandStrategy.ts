@@ -30,7 +30,7 @@ import { promisify } from 'node:util'
 import { docker, forceRemove, removeImage } from '../containerRuntime.js'
 import { baseImageFor, supportedLanguages } from '../baseImages.js'
 import { containmentArgs } from '../sandboxPolicy.js'
-import { sandboxBlockedBy } from '../sandboxSignatures.js'
+import { needsNetwork, sandboxBlockedBy } from '../sandboxSignatures.js'
 import { emptyResult, hitResourceLimit, withLog, type ProbeContext, type ProbeStrategy } from './probeContract.js'
 import type { ProbeInput, ProbeResult } from '../types.js'
 
@@ -166,7 +166,19 @@ export const commandStrategy: ProbeStrategy = {
       // Checked BEFORE calling it a failed build. The declared command is the team's, but the
       // network it cannot reach and the directories it cannot write are ours, and the first
       // real entry of the event failed on exactly this.
+      //
+      // Two ways of telling. The output is checked first, because a tool that said what went
+      // wrong is better evidence than an inference. Failing that, a command that HAS to fetch
+      // dependencies in a container with no network could not have succeeded whatever it
+      // printed — which is how npm's "Exit handler never called!" is caught.
+      const sealed = input.policy.egressAllowList.length === 0
+      const step = sealed ? needsNetwork(input.buildCommand ?? '') : null
       const blocked = sandboxBlockedBy(output)
+        ?? (step === null ? null : {
+          control: 'NO_NETWORK' as const,
+          evidence: `the declared command runs "${step}", which cannot reach a package registry `
+            + `in a container started with no network`,
+        })
       if (blocked) {
         result.sandboxBlock = blocked
         result.outcome = 'SANDBOX_BLOCKED'

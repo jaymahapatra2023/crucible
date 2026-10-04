@@ -85,6 +85,53 @@ export function sandboxBlockedBy(output: string): SandboxBlock | null {
   return null
 }
 
+/**
+ * Steps that CANNOT succeed without a package registry.
+ *
+ * Matching each tool's wording is a losing game. npm, asked to install with no network, reports
+ * `Exit handler never called!` and calls it "an error with npm itself" — no DNS message, no
+ * errno, nothing a pattern would catch. That was a real entry at the event, graded zero.
+ *
+ * So this reasons from what is KNOWN instead of from what was printed: if the declared command
+ * has to fetch dependencies and the sandbox gave it no network, then its failure is caused by
+ * the sandbox, whatever the tool chose to say. That holds for every package manager at once and
+ * does not need updating when one of them changes its error text.
+ *
+ * It is consulted ONLY after the output has been checked for a real application error, and only
+ * when egress was actually denied.
+ */
+const INSTALL_STEPS: readonly RegExp[] = [
+  /\bnpm\s+(ci|i|install|add)\b/,
+  /\b(pnpm|yarn|bun)\s+(install|add|i)\b/,
+  /\bpip3?\s+install\b/,
+  /\b(poetry|pipenv|uv)\s+(install|sync|add)\b/,
+  /\bbundle\s+install\b/,
+  /\bgo\s+(mod\s+(download|tidy)|get)\b/,
+  /\bcargo\s+(build|run|fetch|install)\b/,
+  // `gradlew` rather than `./gradlew`: a word boundary cannot sit before a dot, so the anchored
+  // form silently matched nothing. Matching the bare name catches `./gradlew` and `sh gradlew`.
+  /\b(mvn|gradle|gradlew)\b/,
+  /\bcomposer\s+(install|require|update)\b/,
+  /\bmix\s+deps\.get\b/,
+  /\bdotnet\s+restore\b/,
+  /\bapt-get\s+install\b/,
+  /\bapk\s+add\b/,
+]
+
+/**
+ * The install step in a declared command that the sandbox cannot let succeed, or null.
+ *
+ * Returns the matched text so the grade reason can name it: a reviewer should be able to see
+ * which step this rests on, and disagree with it if the team's lockfile was vendored.
+ */
+export function needsNetwork(command: string): string | null {
+  for (const step of INSTALL_STEPS) {
+    const found = step.exec(command)
+    if (found) return found[0]
+  }
+  return null
+}
+
 /** What the grade says, in a sentence a team and a reviewer read the same way. */
 export function describeBlock(block: SandboxBlock): string {
   const cause = {

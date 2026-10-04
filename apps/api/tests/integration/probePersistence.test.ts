@@ -166,6 +166,12 @@ describe('grading is deterministic (E05-S04 acceptance 2 and 3)', () => {
   })
 
   it('grades a failing build as FAILS_TO_BUILD with a reason', async () => {
+    // A command that needs no registry, so the failure is unambiguously the team's. The default
+    // fixture command is `npm ci`, which the sandbox cannot let succeed — that case is the test
+    // below it, and conflating the two would hide both.
+    await query(
+      `UPDATE submission SET build_command = 'node index.js' WHERE submission_id = $1`,
+      [submissionId])
     scriptRuntime({ buildExit: 3, stdout: 'compilation error' })
     const { probe } = await inScope(() => probeSubmission({ submissionId }))
     expect(probe.outcome).toBe('BUILD_FAILED')
@@ -175,6 +181,8 @@ describe('grading is deterministic (E05-S04 acceptance 2 and 3)', () => {
   })
 
   it('grades a SANDBOX-caused stop as 3 of 4, and stores the reason a reviewer reads', async () => {
+    // The fixture's declared command is `npm ci`, which is the point: it cannot reach a registry
+    // in a sealed container, so the failure is the environment's however npm words it.
     // The event's first entry: a declared command that reaches the network, which the run
     // container does not have. Stored as a deduction rather than a failure, and the figure a
     // human sees — 3, not 0 — is the whole point of the row.
@@ -192,6 +200,9 @@ describe('grading is deterministic (E05-S04 acceptance 2 and 3)', () => {
   })
 
   it('still grades the team’s OWN crash as zero — the deduction is not an amnesty', async () => {
+    await query(
+      `UPDATE submission SET build_command = 'node index.js' WHERE submission_id = $1`,
+      [submissionId])
     scriptRuntime({ buildExit: 1, stdout: 'TypeError: undefined is not a function' })
     const { probe } = await inScope(() => probeSubmission({ submissionId }))
     expect(probe.outcome).toBe('BUILD_FAILED')
