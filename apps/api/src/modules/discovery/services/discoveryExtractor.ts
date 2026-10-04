@@ -65,8 +65,15 @@ function dropContradicted(
       continue
     }
     // UNVERIFIABLE is kept and labelled: a budget that stopped short is a fact about our
-    // reading, not about the submission.
-    kept.push({ ...finding, detail: { ...finding.detail, citation_verdict: check.verdict } })
+    // reading, not about the submission. RELOCATED is kept too, with the line numbers CORRECTED
+    // to where the quoted text actually is — storing the cited ones would leave a finding
+    // pointing at code the team did not write.
+    const at = check.corrected
+    kept.push({
+      ...finding,
+      ...(at ? { line_start: at.lineStart, line_end: at.lineEnd } : {}),
+      detail: { ...finding.detail, citation_verdict: check.verdict },
+    })
   }
 
   return { kept, rejected }

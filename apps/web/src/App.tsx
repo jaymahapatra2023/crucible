@@ -25,6 +25,8 @@ const CoachSheetsPage = lazy(() => import('./pages/CoachSheetsPage.js').then((m)
 const FinalRankingPage = lazy(() => import('./pages/FinalRankingPage.js').then((m) => ({ default: m.FinalRankingPage })))
 const SubmitPage = lazy(() => import('./pages/SubmitPage.js').then((m) => ({ default: m.SubmitPage })))
 const RegisterPage = lazy(() => import('./pages/RegisterPage.js').then((m) => ({ default: m.RegisterPage })))
+const ConfirmPage = lazy(() => import('./pages/ConfirmPage.js').then((m) => ({ default: m.ConfirmPage })))
+const CoachPage = lazy(() => import('./pages/CoachPage.js').then((m) => ({ default: m.CoachPage })))
 const LoginPage = lazy(() => import('./pages/LoginPage.js').then((m) => ({ default: m.LoginPage })))
 
 export function App() {
@@ -38,6 +40,8 @@ export function App() {
             {/* Public: teams have no Crucible account by design (P8.2). */}
             <Route path="/submit" element={<SubmitPage />} />
             {/* Public: participants form their own teams through an emailed link (E44). */}
+            <Route path="/coach" element={<CoachPage />} />
+            <Route path="/confirm" element={<ConfirmPage />} />
             <Route path="/register" element={<RegisterPage />} />
             <Route path="/runs" element={<RequireAuth><RunsPage /></RequireAuth>} />
             <Route path="/health" element={<RequireAuth><HealthPage /></RequireAuth>} />

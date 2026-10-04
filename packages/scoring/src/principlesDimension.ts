@@ -136,6 +136,21 @@ export function principlesStandardsDimension(
   const scoredCount = rubricSide.scoredCount + adoptedSide.scoredCount
   const totalCount = rubricSide.totalCount + adoptedSide.totalCount
 
+  /**
+   * One weight figure from the two sides, by the split that produced the score.
+   *
+   * Written once because both coverage figures must be blended identically: two copies of this
+   * expression are how `weightCovered` and `weightTotal` come to disagree about what a half
+   * means, and their ratio is the number the whole coverage check rests on.
+   */
+  const blend = (fromRubric: number, fromAdopted: number): number => round(
+    haveRubric && haveAdopted
+      ? fromRubric * appliedSplit + fromAdopted * (1 - appliedSplit)
+      : haveRubric ? fromRubric
+      : haveAdopted ? fromAdopted
+      : 0,
+  )
+
   return {
     dimension: PRINCIPLES_DIMENSION,
     score,
@@ -148,13 +163,11 @@ export function principlesStandardsDimension(
     // same thing here as on every other dimension. A count ratio would read as coverage but
     // measure something else, and it is the figure a reviewer uses to judge how much of the
     // dimension was actually evidenced.
-    weightCovered: round(
-      haveRubric && haveAdopted
-        ? rubricSide.weightCovered * appliedSplit + adoptedSide.weightCovered * (1 - appliedSplit)
-        : haveRubric ? rubricSide.weightCovered
-        : haveAdopted ? adoptedSide.weightCovered
-        : 0,
-    ),
+    weightCovered: blend(rubricSide.weightCovered, adoptedSide.weightCovered),
+    // Blended by the same split, for the same reason: coverage has to mean the same thing on
+    // this dimension as on every other, or the one figure that makes two composites comparable
+    // is measuring something different here.
+    weightTotal: blend(rubricSide.weightTotal, adoptedSide.weightTotal),
     excluded: [...rubricSide.excluded, ...adoptedSide.excluded],
     rubricScore: rubricSide.score,
     adoptedScore: adoptedSide.score,

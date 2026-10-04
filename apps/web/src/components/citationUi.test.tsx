@@ -75,4 +75,13 @@ describe('accessibility', () => {
     expect(screen.getByText(/checked against the source/i)).toBeInTheDocument()
     expect(screen.getByText(/outside what the scan read/i)).toBeInTheDocument()
   })
+
+  it('reads a RELOCATED citation as a pass, not a failure', () => {
+    // The quotation was exact and only the line was wrong, and the line shown has already been
+    // corrected. Rendering it as "not found in the source" would tell a reviewer the opposite of
+    // the truth about the team's code.
+    render(<ScoreCard score={score([evidence({ verdict: 'RELOCATED' })])} />)
+    expect(screen.getByText(/line corrected/i)).toBeInTheDocument()
+    expect(screen.queryByText(/not found in the source/i)).not.toBeInTheDocument()
+  })
 })

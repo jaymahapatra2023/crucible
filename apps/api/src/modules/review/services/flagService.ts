@@ -32,6 +32,9 @@ export interface FlagSubject {
   challengeFidelity?: number | null
   /** Mean of the other dimensions that were scored, for the contrast the flag draws. */
   otherDimensionsMean?: number | null
+  /** The composite as ranked, and the share of the rubric's weight that produced it. */
+  composite?: number | undefined
+  criterionCoverage?: number | undefined
 }
 
 /**
@@ -68,7 +71,14 @@ export async function generateFlags(input: {
         filesTotal: scan.files_total,
         budgetTruncated: scan.budget_truncated,
       },
-      nonScores: nonScores.get(id),
+      nonScores: nonScores.get(id) && {
+        ...nonScores.get(id)!,
+        // Passed through so the caveat can state the EFFECT rather than only the fact. Because
+        // the average is taken over covered weight, counting the unscored criteria as zero is
+        // exactly `composite × coverage` — a number a reviewer can act on.
+        coverage: subject.criterionCoverage,
+        composite: subject.composite,
+      },
       probe: probe && {
         outcome: probe.outcome, runsGrade: probe.runs_grade, reason: probe.grade_reason,
       },

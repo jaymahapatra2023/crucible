@@ -96,6 +96,7 @@ export async function computeRanking(
     fidelityNormalised: entry.fidelityNormalised,
     cohortSize: entry.cohortSize,
     normalisationMethod: entry.normalisationMethod,
+    criterionCoverage: entry.criterionCoverage,
     rankGlobal: entry.rankGlobal,
     rankInChallenge: entry.rankInChallenge,
     tied: entry.tied,
@@ -135,6 +136,10 @@ export async function computeRanking(
       // caveat can draw the contrast that matters: good work, wrong question.
       challengeFidelity: entry.fidelityNormalised,
       otherDimensionsMean: meanOfOtherDimensions(dimensions.get(entry.submissionId) ?? []),
+      // So the evidence caveat can state the EFFECT of what was not scored rather than only the
+      // fact: counting the unscored criteria as zero is exactly composite × coverage.
+      composite: entry.composite,
+      criterionCoverage: entry.criterionCoverage,
     })),
   })
 

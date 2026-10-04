@@ -45,6 +45,15 @@ export interface DimensionScore {
   totalCount: number
   /** Share of the dimension's weight that was actually scoreable, 0–1. */
   weightCovered: number
+  /**
+   * The weight the dimension's criteria carry in total, scored or not.
+   *
+   * Carried so that coverage can be computed one level up. Without it, two composites built over
+   * different amounts of the rubric look identical, and the one missing a criterion the entry
+   * would have done badly on looks BETTER — which is how an entry scored a perfect 100 on the
+   * calibration set while a criterion it failed quietly vanished.
+   */
+  weightTotal: number
   excluded: Array<{ criterionId: string; reason: string }>
 }
 
@@ -77,6 +86,7 @@ export function aggregateDimension(
   let weightedTotal = 0
   let weightCovered = 0
   let scoredCount = 0
+  const weightTotal = inDimension.reduce((n, c) => n + c.weight, 0)
 
   for (const criterion of inDimension) {
     const score = byCriterion.get(criterion.criterionId)
@@ -96,7 +106,7 @@ export function aggregateDimension(
   if (inDimension.length === 0) {
     return {
       dimension, score: null, dataQuality: 'UNSCORED',
-      scoredCount: 0, totalCount: 0, weightCovered: 0, excluded: [],
+      scoredCount: 0, totalCount: 0, weightCovered: 0, weightTotal: 0, excluded: [],
     }
   }
   if (weightCovered === 0) {
@@ -104,7 +114,8 @@ export function aggregateDimension(
     // point of acceptance 3.
     return {
       dimension, score: null, dataQuality: 'UNSCORED',
-      scoredCount: 0, totalCount: inDimension.length, weightCovered: 0, excluded,
+      scoredCount: 0, totalCount: inDimension.length, weightCovered: 0,
+      weightTotal: round(weightTotal), excluded,
     }
   }
 
@@ -116,6 +127,7 @@ export function aggregateDimension(
     scoredCount,
     totalCount: inDimension.length,
     weightCovered: round(weightCovered),
+    weightTotal: round(weightTotal),
     excluded,
   }
 }

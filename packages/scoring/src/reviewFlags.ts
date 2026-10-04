@@ -26,8 +26,19 @@ export interface ReviewFlag {
 export interface FlagInputs {
   /** From the persisted scan (E04-S04). */
   scan?: { filesAnalysed: number; filesTotal: number; budgetTruncated: boolean } | undefined
-  /** Criteria that produced no score, by reason. */
-  nonScores?: { insufficient: number; failed: number; total: number } | undefined
+  /**
+   * Criteria that produced no score, by reason — and what their absence did to the composite.
+   *
+   * `coverage` is the share of the rubric's weight that produced a score. Because a dimension
+   * averages over the weight it covered, counting the unscored criteria as zero gives exactly
+   * `composite × coverage`, which is the figure a reviewer needs: it says how much of the mark
+   * rests on the gap.
+   */
+  nonScores?: {
+    insufficient: number; failed: number; total: number
+    coverage?: number | undefined
+    composite?: number | undefined
+  } | undefined
   /** From the build probe (E05). */
   probe?: { outcome: string; runsGrade: string; reason: string } | undefined
   /** Provenance observations, already worded by the scanner (E04-S06). */
@@ -127,15 +138,32 @@ function evidenceFlag(nonScores: FlagInputs['nonScores']): ReviewFlag | null {
     parts.push(`${nonScores.failed} failed to score for technical reasons`)
   }
 
+  // The effect, stated as a number, when we know it. "Ranked on less evidence" is true and
+  // understates it: the average is taken over the weight that was covered, so a criterion the
+  // entry would have scored badly on RAISES the composite by being absent. On the calibration
+  // set an entry scored a perfect 100 this way; counting its one lost criterion as zero gave 92.
+  const effect = describeEffect(nonScores)
+
   return {
     code: 'INSUFFICIENT_EVIDENCE',
     severity: 'ATTENTION',
     message:
       `${unscored} of ${nonScores.total} criteria produced no score: ${parts.join(', ')}. ` +
       `These were excluded from the averages rather than counted as zero, so this team was ` +
-      `ranked on less evidence than a fully-scored one — not marked down.`,
+      `ranked on less evidence than a fully-scored one — not marked down.${effect}`,
     detail: { ...nonScores },
   }
+}
+
+/** The one sentence that turns "less evidence" into something a reviewer can weigh. */
+function describeEffect(nonScores: NonNullable<FlagInputs['nonScores']>): string {
+  const { coverage, composite } = nonScores
+  if (coverage === undefined || composite === undefined || coverage >= 1) return ''
+
+  const asZero = Math.round(composite * coverage * 10) / 10
+  return ` The score rests on ${Math.round(coverage * 100)}% of the rubric's weight: counting `
+    + `the unscored criteria as zero would give ${asZero} rather than `
+    + `${Math.round(composite * 10) / 10}.`
 }
 
 function probeFlag(probe: FlagInputs['probe']): ReviewFlag | null {

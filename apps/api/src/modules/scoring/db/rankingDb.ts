@@ -50,6 +50,7 @@ export interface CompositeRow {
   rank_in_challenge: number
   tied: boolean
   weight_covered: number
+  criterion_coverage: number
   missing_dimensions: string[]
   partial: boolean
   in_cut_band: boolean
@@ -71,6 +72,14 @@ export interface CompositeInsert {
   rankInChallenge: number
   tied: boolean
   weightCovered: number
+  /**
+   * Share of the rubric's criterion weight that produced a score (migration 108).
+   *
+   * Optional so a caller that composed its rows by hand — a fixture, a backfill — need not
+   * assert a figure it did not compute. Absent means 1: every criterion scored. The real ranking
+   * path always supplies it.
+   */
+  criterionCoverage?: number
   missingDimensions: string[]
   partial: boolean
   inCutBand: boolean
@@ -108,12 +117,15 @@ export async function replaceRanking(
         `INSERT INTO submission_composite
            (run_index_id, submission_id, challenge_id, composite, fidelity_raw,
             fidelity_normalised, cohort_size, normalisation_method, rank_global,
-            rank_in_challenge, tied, weight_covered, missing_dimensions, partial,
+            rank_in_challenge, tied, weight_covered, criterion_coverage,
+            missing_dimensions, partial,
             in_cut_band, advisory_decided, requires_review, review_reasons)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13::text[],$14,$15,$16,$17,$18::text[])`,
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14::text[],$15,$16,$17,$18,
+                 $19::text[])`,
         [runIndexId, row.submissionId, row.challengeId, row.composite, row.fidelityRaw,
          row.fidelityNormalised, row.cohortSize, row.normalisationMethod, row.rankGlobal,
-         row.rankInChallenge, row.tied, row.weightCovered, row.missingDimensions, row.partial,
+         row.rankInChallenge, row.tied, row.weightCovered, row.criterionCoverage ?? 1,
+         row.missingDimensions, row.partial,
          row.inCutBand, row.advisoryDecided,
          row.reviewReasons.length > 0, row.reviewReasons])
     }

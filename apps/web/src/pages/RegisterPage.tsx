@@ -33,9 +33,30 @@ function Start() {
   return (
     <section style={{ maxWidth: 560 }}>
       <h1 style={{ fontSize: 19 }}>Register your team</h1>
+
+      {/* The single most expensive misunderstanding on the day: four people registering the
+          same team four times, taking four slots, four rooms and four coaches between them.
+          Said first, said twice, and said in the strongest place on the page (P5.4). */}
+      <div role="note" style={{
+        border: '2px solid var(--accent)', borderRadius: 8, padding: 12, margin: '12px 0',
+      }}>
+        <p style={{ margin: 0, fontWeight: 700, fontSize: 15 }}>
+          One registration per team. Not one per person.
+        </p>
+        <p style={{ margin: '6px 0 0', fontSize: 13 }}>
+          <strong>Any one member registers on behalf of everybody.</strong> They add the rest of
+          the team by email address, and everyone then gets the team’s details. If two of you do
+          this, your team is registered twice and ends up split across two rooms with two
+          different coaches.
+        </p>
+        <p style={{ margin: '6px 0 0', fontSize: 13 }}>
+          Decide between you who is doing it, and let them finish before anybody else tries.
+        </p>
+      </div>
+
       <p style={{ color: 'var(--text-muted)', fontSize: 13 }}>
-        Enter the email address you registered with. A link will be sent to it; from there you
-        name the team and add your teammates.
+        If that is you, enter the email address you registered with. A link will be sent to it;
+        from there you name the team and add your teammates.
       </p>
 
       {outcome?.status === 'SENT' ? (

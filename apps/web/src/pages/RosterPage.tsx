@@ -7,6 +7,8 @@ import { updateTeam } from '../lib/intakeApi.js'
 import { RosterImportPanel } from '../components/RosterImportPanel.js'
 import { ReadinessChecklist } from '../components/ReadinessChecklist.js'
 import { PeoplePanel } from '../components/PeoplePanel.js'
+import { CorrectionQueue } from '../components/CorrectionQueue.js'
+import { ArrivalPanel } from '../components/ArrivalPanel.js'
 import { VenuePanel } from '../components/VenuePanel.js'
 import { LogisticsPanel } from '../components/LogisticsPanel.js'
 import { SlotPanel } from '../components/SlotPanel.js'
@@ -21,6 +23,10 @@ import {
   type SlotPlan, type SlotStatus, type TeamSlot,
   type TeamLogistics,
 } from '../lib/rosterApi.js'
+import {
+  decideCorrection, getCorrections, type Correction,
+} from '../lib/confirmApi.js'
+import { getArrivals, type ArrivalSummary } from '../lib/arrivalApi.js'
 
 interface PageData {
   board: RosterBoard
@@ -30,6 +36,10 @@ interface PageData {
   coaches: Coach[]
   logistics: TeamLogistics[]
   slots: { status: SlotStatus; slots: TeamSlot[] }
+  /** Empty below organiser: the read is refused and the panel does not appear. */
+  corrections: Correction[]
+  /** Null below organiser, for the same reason. */
+  arrivals: ArrivalSummary | null
 }
 
 /**
@@ -89,12 +99,18 @@ export function RosterPage() {
    */
   const { state, reload } = useAsyncData<PageData>(
     async () => {
-      const [board, people, rooms, coaches, logistics, slots] = await Promise.all([
+      const [
+        board, people, rooms, coaches, logistics, slots, corrections, arrivals,
+      ] = await Promise.all([
         getBoard(), getParticipants(peopleQuery), getRooms(), getCoaches(), getLogistics(),
         getSlots(),
+        // Absent below organiser: the queue holds names and addresses, so the read is refused
+        // and the panel simply does not appear.
+        getCorrections('PENDING').catch(() => [] as Correction[]),
+        getArrivals().catch(() => null),
       ])
       return {
-        board, people, rooms, coaches, logistics, slots,
+        board, people, rooms, coaches, logistics, slots, corrections, arrivals,
         readiness: await getRosterReadiness().catch(() => [] as RosterCheck[]),
       }
     },
@@ -143,7 +159,9 @@ export function RosterPage() {
     )
   }
 
-  const { board, readiness, people, rooms, coaches, logistics, slots } = state.data
+  const {
+    board, readiness, people, rooms, coaches, logistics, slots, corrections, arrivals,
+  } = state.data
 
   return (
     <section>
@@ -212,23 +230,32 @@ export function RosterPage() {
       )}
 
       {tab === 'People' && (
-        <PeoplePanel
-          people={people.participants} total={people.total} busy={busy}
-          query={peopleQuery} onQuery={setPeopleQuery}
-          onAdd={(input) => void act(() => createParticipant(input))}
-          onSave={(id, changes) => void act(() => updateParticipant(id, changes))}
-          onRemove={(id, reason) => void act(() => removeParticipant(id, reason))}
-        />
+        <>
+          <CorrectionQueue
+            corrections={corrections} busy={busy} canDecide={provisioner}
+            onDecide={(id, approve) => void act(() => decideCorrection(id, approve))}
+          />
+          <PeoplePanel
+            people={people.participants} total={people.total} busy={busy}
+            query={peopleQuery} onQuery={setPeopleQuery}
+            onAdd={(input) => void act(() => createParticipant(input))}
+            onSave={(id, changes) => void act(() => updateParticipant(id, changes))}
+            onRemove={(id, reason) => void act(() => removeParticipant(id, reason))}
+          />
+        </>
       )}
 
       {tab === 'Rooms & coaches' && (
-        <VenuePanel
-          rooms={rooms} coaches={coaches} busy={busy}
-          onAddRoom={(input) => void act(() => createRoom(input))}
-          onSaveRoom={(id, changes) => void act(() => updateRoom(id, changes))}
-          onAddCoach={(input) => void act(() => createCoach(input))}
-          onSaveCoach={(id, changes) => void act(() => updateCoach(id, changes))}
-        />
+        <>
+          <ArrivalPanel state={arrivals} busy={busy} onRefresh={() => void reload()} />
+          <VenuePanel
+            rooms={rooms} coaches={coaches} busy={busy}
+            onAddRoom={(input) => void act(() => createRoom(input))}
+            onSaveRoom={(id, changes) => void act(() => updateRoom(id, changes))}
+            onAddCoach={(input) => void act(() => createCoach(input))}
+            onSaveCoach={(id, changes) => void act(() => updateCoach(id, changes))}
+          />
+        </>
       )}
 
       {tab === 'Floor plan' && (

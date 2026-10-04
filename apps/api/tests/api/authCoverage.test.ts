@@ -57,6 +57,7 @@ describe('P8.1 — authenticate every request', () => {
     // entry fails this test by name.
     expect([...PUBLIC_ROUTES].sort()).toEqual([
       'GET /api/v1/challenges/open',
+      'GET /api/v1/coach/names',
       'GET /api/v1/register/*',
       'GET /api/v1/rubrics/published/*',
       'GET /api/v1/submissions/mine',
@@ -66,6 +67,11 @@ describe('P8.1 — authenticate every request', () => {
       'GET /ready',
       'GET /ws/progress',
       'POST /api/v1/auth/login',
+      // Confirming your own name and address (migration 104). Public because the people who
+      // most need it signed up on paper and hold no link; it returns one fixed sentence and
+      // nothing about the roster, and applies nothing without an organiser.
+      'POST /api/v1/coach/confirm',
+      'POST /api/v1/confirm',
       'POST /api/v1/register/*',
       'POST /api/v1/register/start',
       'POST /api/v1/submissions',

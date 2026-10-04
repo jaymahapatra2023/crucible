@@ -119,20 +119,26 @@ export function EvidenceList({ evidence }: { evidence: EvidenceItem[] }) {
  * worded as a statement about our reading — the file was outside the scan budget — never as
  * doubt about the team, because that is what it is.
  *
+ * `RELOCATED` is a fourth state and reads as a pass, because it is one: the quotation was exact
+ * and only the line number was wrong, and the line shown beside it has already been corrected to
+ * where the text really is. Rendering it in red as "not found" would tell a reviewer the
+ * opposite of the truth about the team's code.
+ *
  * Never colour alone (P5.5): each state carries a word.
  */
 function CitationVerdict({
   verdict, reason,
 }: {
-  verdict?: 'VERIFIED' | 'UNVERIFIABLE' | 'CONTRADICTED'
+  verdict?: 'VERIFIED' | 'RELOCATED' | 'UNVERIFIABLE' | 'CONTRADICTED'
   reason?: string
 }) {
   if (verdict === undefined) return null
 
-  const tone = verdict === 'VERIFIED' ? 'var(--ok)'
+  const tone = verdict === 'VERIFIED' || verdict === 'RELOCATED' ? 'var(--ok)'
     : verdict === 'UNVERIFIABLE' ? 'var(--text-muted)' : 'var(--danger)'
   const label = verdict === 'VERIFIED' ? 'checked against the source'
-    : verdict === 'UNVERIFIABLE' ? 'outside what the scan read' : 'not found in the source'
+    : verdict === 'RELOCATED' ? 'checked against the source, line corrected'
+      : verdict === 'UNVERIFIABLE' ? 'outside what the scan read' : 'not found in the source'
 
   return (
     <span style={{ color: tone, fontFamily: 'var(--font)' }} title={reason}>

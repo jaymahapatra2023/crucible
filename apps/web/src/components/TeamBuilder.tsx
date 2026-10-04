@@ -67,6 +67,16 @@ export function TeamBuilder({
         Registering as <strong>{scope.registrantName}</strong>. You are on the team automatically.
       </p>
 
+      {/* Repeated here because this is the screen where it is still cheap to stop. */}
+      <p role="note" style={{
+        fontSize: 13, border: '1px solid var(--accent)', borderRadius: 6, padding: 10,
+        margin: '0 0 14px',
+      }}>
+        <strong>You are registering the whole team, once.</strong> Add every teammate below —
+        they do not register separately, and if they do, your team will exist twice. Everyone on
+        this list gets the team’s room, floor and coach by email.
+      </p>
+
       <FormField id="reg-name" label="Team name" required
         hint="Compared ignoring case, punctuation and a leading “the” — pick something that differs by more than that."
         error={nameCheck && !nameCheck.ok ? nameCheck.message : null}>

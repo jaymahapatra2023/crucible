@@ -95,6 +95,18 @@ const CEILINGS: Record<string, Ceiling> = {
   'POST /api/v1/register/start': {
     key: 'http.ceiling_registration_per_hour', windowMs: HOUR, identify: (req) => `ip:${req.ip}`,
   },
+  /*
+   * Confirming your own details (migration 104). Counted by IP and sharing the registration
+   * ceiling, which at a venue is one shared address for everybody — so it is a breaker against a
+   * script writing claims in a loop, not a limit any queue of students could reach.
+   */
+  'POST /api/v1/confirm': {
+    key: 'http.ceiling_registration_per_hour', windowMs: HOUR, identify: (req) => `ip:${req.ip}`,
+  },
+  /* A coach tapping their name (migration 105). Same breaker, same reasoning. */
+  'POST /api/v1/coach/confirm': {
+    key: 'http.ceiling_registration_per_hour', windowMs: HOUR, identify: (req) => `ip:${req.ip}`,
+  },
   'POST /api/v1/register/:token/lookup': {
     key: 'http.ceiling_registration_per_hour', windowMs: HOUR, identify: byLinkParam,
   },
@@ -123,6 +135,9 @@ export const UNLIMITED: readonly string[] = [
   // Reads inside a registration: what the link resolves to, and whether a name collides. A
   // registrant checks the name on every keystroke, and that is wanted.
   'GET /api/v1/register/*',
+  // The coach list (migration 105): thirty-four names, one cheap query, fetched once when the
+  // page opens. It carries no address and no team, so there is nothing a ceiling would protect.
+  'GET /api/v1/coach/names',
 ]
 
 /**

@@ -38,6 +38,18 @@ export interface CompositeScore {
   missingDimensions: Dimension[]
   /** Share of the rubric's weight that was actually scoreable, 0–1. */
   weightCovered: number
+  /**
+   * The share of the RUBRIC'S criterion weight that actually produced a score, 0–1.
+   *
+   * Distinct from `weightCovered`, which is about dimensions. This is the number that says
+   * whether two composites are comparable at all: one built over every criterion and one built
+   * over 85% of them are not the same measurement, and the arithmetic cannot tell them apart
+   * because both renormalise to the weight they covered.
+   *
+   * It is reported rather than corrected. Inventing a score for a criterion nobody could measure
+   * would be worse than saying how much was measured.
+   */
+  criterionCoverage: number
   /** True when any contributing dimension was PARTIAL. */
   partial: boolean
 }
@@ -90,12 +102,26 @@ export function computeComposite(input: CompositeInput): CompositeScore {
   const byDimension = new Map(input.dimensions.map((d) => [d.dimension, d]))
   const { weighted, weightCovered, missing, partial } = combine(input, byDimension)
 
+  // Across every dimension that carries weight, how much of its criterion weight was scored.
+  // Summed over the rubric rather than per dimension, because an entry can lose one criterion
+  // in each of three dimensions and look complete in all of them.
+  let covered = 0
+  let total = 0
+  for (const dimension of DIMENSIONS) {
+    if (input.weights[dimension] <= 0) continue
+    const scored = byDimension.get(dimension)
+    if (!scored) continue
+    covered += scored.weightCovered
+    total += scored.weightTotal
+  }
+
   return {
     submissionId: input.submissionId,
     challengeId: input.challengeId,
     composite: weightCovered === 0 ? 0 : round(weighted / weightCovered),
     fidelityRaw: input.fidelity === null ? null : round(input.fidelity.raw),
     fidelityNormalised: input.fidelity === null ? null : round(input.fidelity.normalised),
+    criterionCoverage: total === 0 ? 0 : round(covered / total),
     cohortSize: input.fidelity?.cohortSize ?? 0,
     normalisationMethod: input.fidelity?.method ?? 'UNSCORED',
     missingDimensions: missing,

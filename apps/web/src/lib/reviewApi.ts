@@ -97,7 +97,7 @@ export interface TeamDetail {
     evidence: Array<{
       path: string; lineStart: number; lineEnd: number; excerpt: string
       /** The verdict of checking this citation against the scan (E13). Absent on older scores. */
-      verdict?: 'VERIFIED' | 'UNVERIFIABLE' | 'CONTRADICTED'
+      verdict?: 'VERIFIED' | 'RELOCATED' | 'UNVERIFIABLE' | 'CONTRADICTED'
       verdictReason?: string
     }>
     context_bytes: number

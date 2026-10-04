@@ -35,6 +35,8 @@ import { registerSubmissionRoutes } from './modules/submissions/routes/submissio
 import { registerTeamRoutes } from './modules/submissions/routes/teamRoutes.js'
 import { registerReminderRoutes } from './modules/submissions/routes/reminderRoutes.js'
 import { registerCodeHandoutRoutes } from './modules/submissions/routes/codeHandoutRoutes.js'
+import { registerCorrectionRoutes } from './modules/roster/routes/correctionRoutes.js'
+import { registerArrivalRoutes } from './modules/roster/routes/arrivalRoutes.js'
 import { registerFinalRankingRoutes } from './modules/scoring/routes/finalRankingRoutes.js'
 import { registerRosterRoutes } from './modules/roster/routes/rosterRoutes.js'
 import { registerSlotRoutes } from './modules/roster/routes/slotRoutes.js'
@@ -125,6 +127,8 @@ export async function buildServer(options: BuildOptions = {}): Promise<FastifyIn
   await registerTeamRoutes(app)
   await registerReminderRoutes(app)
   await registerCodeHandoutRoutes(app)
+  await registerCorrectionRoutes(app)
+  await registerArrivalRoutes(app)
   await registerRosterRoutes(app)
   await registerSlotRoutes(app)
   await registerRegistrationRoutes(app)

@@ -10,6 +10,17 @@
  * entirely. Not "keep the score and drop the bad citation" — a response that fabricated one
  * citation has not earned trust in the rest of itself, and a score whose evidence was quietly
  * pruned is exactly the unfalsifiable artefact this system exists to avoid.
+ *
+ * What that rule does NOT cover is a citation that quotes the source exactly and names the wrong
+ * line. Measured on the calibration set, that was 301 of 344 rejections — and the consequence
+ * was not a lower score but a HIGHER one: the response was retried three times, the criterion
+ * was then lost, and the composite renormalises over covered weight, so losing a criterion the
+ * entry did badly on raises its mark. One entry scored a perfect 100 that way; counting the lost
+ * criterion as zero would have given it 92.
+ *
+ * So a misplaced quotation is now RELOCATED rather than CONTRADICTED: the response stands, and
+ * the corrected line numbers are stored in place of the cited ones so a reviewer following the
+ * evidence lands on the real code. Fabrication still fails the whole response.
  */
 import { verifyCitations, type CitationInput, type CitationSummary } from '@crucible/scoring'
 import type { ScanResult } from '@crucible/scanner'
@@ -54,14 +65,26 @@ export function citationGuard(
     if (evidence.length === 0) return { ok: true }
 
     const summary = verifyCitations(evidence.map(toCitation), scan, options)
-    if (!summary.anyContradicted) return { ok: true }
+    if (!summary.anyContradicted) {
+      if (summary.relocated > 0) {
+        // Not a failure. Worth a line because a model that is consistently out by nine lines is
+        // telling you something about the excerpt windows it was given.
+        log.info('scoring output quoted the source but cited the wrong line', {
+          ...context, relocated: summary.relocated, of: summary.checks.length,
+        })
+      }
+      return { ok: true }
+    }
 
     const reasons = summary.checks
       .filter((c) => c.verdict === 'CONTRADICTED')
       .map((c) => c.reason)
 
     log.warn('scoring output cited something the scan contradicts', {
-      ...context, contradicted: summary.contradicted, reasons,
+      ...context, contradicted: summary.contradicted,
+      // Reported alongside, so a response failing for one fabrication does not hide that the
+      // rest of its line numbers were also wrong.
+      relocated: summary.relocated, reasons,
     })
 
     return {
@@ -104,12 +127,18 @@ export function withVerdicts(
   options: { drift: number },
 ): CheckedEvidence[] {
   const summary = checkEvidence(evidence, scan, options)
-  return evidence.map((e, i) => ({
-    path: e.path,
-    lineStart: e.line_start,
-    lineEnd: e.line_end,
-    excerpt: e.excerpt,
-    verdict: summary.checks[i]?.verdict ?? 'UNVERIFIABLE',
-    verdictReason: summary.checks[i]?.reason ?? 'Not checked.',
-  }))
+  return evidence.map((e, i) => {
+    const check = summary.checks[i]
+    // The corrected range when the quote was found elsewhere in the same file. Storing the cited
+    // numbers instead would leave an appeal packet pointing at code the team did not write.
+    const at = check?.corrected
+    return {
+      path: e.path,
+      lineStart: at?.lineStart ?? e.line_start,
+      lineEnd: at?.lineEnd ?? e.line_end,
+      excerpt: e.excerpt,
+      verdict: check?.verdict ?? 'UNVERIFIABLE',
+      verdictReason: check?.reason ?? 'Not checked.',
+    }
+  })
 }

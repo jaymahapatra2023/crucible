@@ -1,0 +1,10 @@
+# Addresses the sync must never add, one per line. Blank lines and # comments ignored.
+#
+# Why this exists: Google's published CSV is eventually consistent, so a row you delete from the
+# sheet keeps arriving from a stale edge cache for minutes afterwards — long enough that deleting
+# somebody from the roster and watching it "work" is not proof. This list is the thing that holds
+# regardless of which cached copy a given pass happens to fetch.
+#
+# The real list lives at scripts/sync-exclude.txt and is gitignored: it names individual people's
+# addresses, and this repository is public. Copy this file to that path and add to it locally.
+# Remove an address from it if the person turns up after all.

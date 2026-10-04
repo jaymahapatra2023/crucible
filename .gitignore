@@ -32,3 +32,6 @@ docs/*Volunteers*
 *.xlsx
 participants.csv
 coaches.csv
+
+# Participant addresses — personal data, never published.
+scripts/sync-exclude.txt

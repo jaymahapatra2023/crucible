@@ -74,6 +74,14 @@ export const PUBLIC_ROUTES: readonly string[] = [
   // point — the same factor-at-mount-point arrangement as a submission token — and NO route
   // here returns a list of participants or teams (II.1); a test asserts it.
   'POST /api/v1/register/start',
+  // Confirming your own name and address (migration 104). Public because the people who most
+  // need it signed up on paper and have no link and no account. It returns one fixed sentence
+  // and nothing about the roster, which is what makes that safe.
+  'POST /api/v1/confirm',
+  // Coaches confirming they are at the venue (migration 105). The names are already on the door
+  // of each room; neither route returns an address, an organisation or anything about teams.
+  'GET /api/v1/coach/names',
+  'POST /api/v1/coach/confirm',
   'GET /api/v1/register/*',
   'POST /api/v1/register/*',
 ]

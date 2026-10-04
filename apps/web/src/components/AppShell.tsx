@@ -20,6 +20,12 @@ const NAV = [
   { to: '/submit', label: 'Submit' },
   // The other participant-facing screen, for the same reason: staff can see what entrants see.
   { to: '/register', label: 'Register' },
+  // The third public screen (migration 104): for anybody whose name or address on our list is
+  // wrong, which is most of the people who signed up on paper.
+  { to: '/confirm', label: 'Check details' },
+  // Coaches saying they are here (migration 105). Public for the same reason: they have no
+  // account, and the point is one tap on a phone walking into the building.
+  { to: '/coach', label: 'Coaches' },
   { to: '/roster', label: 'Roster', minRole: 'organiser' },
   { to: '/scoring', label: 'Scoring' },
   { to: '/catalogue', label: 'Principles' },
@@ -31,7 +37,9 @@ const NAV = [
 /** The two pages a participant uses. Signed out, these are the whole navigation (E44-S04). */
 /** Role rank, matching the API's requireRole ordering. */
 const RANK: Record<string, number> = { viewer: 0, reviewer: 1, organiser: 2, admin: 3 }
-const PUBLIC_NAV = NAV.filter((item) => item.to === '/register' || item.to === '/submit')
+const PUBLIC_NAV = NAV.filter((item) =>
+  item.to === '/register' || item.to === '/submit'
+  || item.to === '/confirm' || item.to === '/coach')
 
 /**
  * Application chrome. Navigation is a real landmark with an accessible name (P5.5).

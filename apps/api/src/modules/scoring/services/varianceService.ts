@@ -239,6 +239,7 @@ function asRanked(row: CompositeRow): RankedSubmission {
     normalisationMethod: row.normalisation_method as RankedSubmission['normalisationMethod'],
     missingDimensions: row.missing_dimensions as RankedSubmission['missingDimensions'],
     weightCovered: Number(row.weight_covered),
+    criterionCoverage: Number(row.criterion_coverage),
     partial: row.partial,
     rankGlobal: row.rank_global,
     rankInChallenge: row.rank_in_challenge,

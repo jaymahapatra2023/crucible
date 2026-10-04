@@ -50,6 +50,20 @@ function pairRuns(run1: readonly CompositeRow[], run2: readonly CompositeRow[]):
   return byId
 }
 
+/**
+ * How much of the rubric the LESS complete of the two runs managed to score.
+ *
+ * The worse of the two, deliberately. A merged composite is only as comparable as the run that
+ * read least of the rubric, and taking the better figure would hide exactly the gap this number
+ * exists to show. A run that is missing entirely does not drag it down — there is nothing to
+ * know about a run that did not happen, and `single_run` already says so.
+ */
+function worstCoverage(a: CompositeRow | undefined, b: CompositeRow | undefined): number {
+  const present = [a, b].filter((r): r is CompositeRow => r !== undefined)
+  if (present.length === 0) return 1
+  return Math.min(...present.map((r) => Number(r.criterion_coverage ?? 1)))
+}
+
 /** One composite from a pair: the weighted mean, or the only run's number when one is missing. */
 function combined(submissionId: number, pair: Pair, weights: MergeInput['weights']): Scored {
   const { a, b } = pair
@@ -65,6 +79,7 @@ function combined(submissionId: number, pair: Pair, weights: MergeInput['weights
     normalisationMethod: base.normalisation_method as CompositeScore['normalisationMethod'],
     missingDimensions: base.missing_dimensions as CompositeScore['missingDimensions'],
     weightCovered: Math.max(Number(a?.weight_covered ?? 0), Number(b?.weight_covered ?? 0)),
+    criterionCoverage: worstCoverage(a, b),
     partial: (a?.partial ?? false) || (b?.partial ?? false),
     a, b,
   }

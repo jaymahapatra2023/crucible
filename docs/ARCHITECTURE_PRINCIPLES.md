@@ -588,6 +588,25 @@ this list and not added here with the same rigor is a defect, not a decision:
   by (E17-S04), with no account to do either with. Scoped deliberately: OPEN only, and no brief,
   artefact or draft rubric is reachable — that slug addresses the already-public published
   rubric and nothing else.
+- `POST /api/v1/confirm` — a participant confirming their own name and address (migration 104).
+  Public because the people who most need it signed up on paper at the desk: they hold no link,
+  no token and no account, and the address we have for them is a placeholder. Safe to expose
+  because it **reveals nothing and changes nothing**. The reply is one fixed sentence whether the
+  name is on the list, is not, or is held by two people, so it cannot be used to discover who is
+  at the event one name at a time; and a claim is recorded for an organiser to confirm rather
+  than applied, because rewriting somebody's address would put the claimant on that team's
+  emails, including the one carrying their submission code.
+- `GET /api/v1/coach/names`, `POST /api/v1/coach/confirm` — a coach confirming they are at the
+  venue (migration 105). The list is names only: a coach's name is already printed on the door of
+  the room they are coaching in, and neither route returns an address, an organisation or
+  anything about teams. Confirming is a single tap and is matched on the name alone, which is a
+  deliberate trade — a false confirmation redirects no email, reveals nothing and changes no
+  team, while asking a coach to type an address on a phone walking into a building is the step
+  that stops people bothering. The stored timestamp makes a mass confirmation obvious.
+- `POST /api/v1/register/start`, `GET|POST /api/v1/register/*` — participants registering their
+  own teams (E44). `start` takes one address and returns nothing about the roster; everything
+  under a link is scoped by that link, verified at its mount point, and no route returns a list
+  of participants or teams.
 
 #### P8.2 Tokens are scoped and revocable in real time
 

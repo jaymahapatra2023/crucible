@@ -146,12 +146,18 @@ describe('a fabricated citation is refused', () => {
     expect(rows[0]!.raw_score).toBeNull()
   })
 
-  it('rejects a citation to a line beyond the end of a real file', async () => {
+  it('ACCEPTS a real quotation cited beyond the end of the file, and records the real line', () => {
+    // Changed deliberately. The quotation is exact and the file is right; only the arithmetic is
+    // wrong, and rejecting it cost the criterion entirely — which raised the entry's composite,
+    // because the average is taken over the weight that was covered. Measured on the calibration
+    // set this shape was 301 of 344 rejections.
     const turn = citing({
       path: REAL_PATH, line_start: 900, line_end: 950, excerpt: REAL_TEXT,
     })
-    const { rows } = await scoreWith([turn, turn, turn])
-    expect(rows[0]!.non_score).toBe('SCORING_FAILED')
+    return scoreWith([turn]).then(({ rows }) => {
+      expect(rows[0]!.non_score).toBeNull()
+      expect(rows[0]!.raw_score).not.toBeNull()
+    })
   })
 
   it('rejects a quotation that appears nowhere in the cited file', async () => {

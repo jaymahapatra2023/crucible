@@ -24,7 +24,7 @@ export interface EvidenceItem {
    * Optional because scores taken before citation checking carry none, and showing "checked"
    * for those would be a claim we cannot support.
    */
-  verdict?: 'VERIFIED' | 'UNVERIFIABLE' | 'CONTRADICTED'
+  verdict?: 'VERIFIED' | 'RELOCATED' | 'UNVERIFIABLE' | 'CONTRADICTED'
   verdictReason?: string
 }
 
