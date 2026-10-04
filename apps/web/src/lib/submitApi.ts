@@ -104,11 +104,71 @@ export function submissionProblems(draft: SubmissionDraft, token: string): strin
   if (!/^https?:\/\/.+|^git@.+:.+/.test(draft.repoUrl.trim())) {
     problems.push('Enter the repository URL, starting with https:// or git@.')
   }
-  if (draft.buildMethod === 'DOCKERFILE' && !draft.dockerfilePath?.trim()) {
-    problems.push('Give the path to your Dockerfile, relative to the repository root.')
-  }
-  if (draft.buildMethod === 'COMMAND' && !draft.buildCommand?.trim()) {
-    problems.push('Give the command that builds and starts your application.')
-  }
+  problems.push(...buildProblems(draft))
   return problems
+}
+
+/** Split out to keep `submissionProblems` inside its complexity budget. */
+function buildProblems(draft: SubmissionDraft): string[] {
+  const found: string[] = []
+  const path = draft.dockerfilePath?.trim() ?? ''
+
+  if (draft.buildMethod === 'DOCKERFILE') {
+    if (path === '') {
+      found.push('Give the path to your Dockerfile, relative to the repository root.')
+    } else if (path.startsWith('/') || path.includes('..')) {
+      // The prober refuses these outright and the entry is recorded as unbuildable. Far better
+      // to say so here, while somebody is looking at the field, than after the deadline.
+      found.push(
+        'The Dockerfile path must be inside the repository — no leading slash and no "..". '
+        + 'For example: Dockerfile, or backend/Dockerfile.')
+    }
+  }
+
+  if (draft.buildMethod === 'COMMAND' && !draft.buildCommand?.trim()) {
+    found.push('Give the command that builds and starts your application.')
+  }
+  return found
+}
+
+
+/**
+ * Things that are probably wrong but might not be, so they are said and not enforced (E03-S01).
+ *
+ * Both of the first two entries at codeLinc 11 scored zero on the Runs dimension for a mistake
+ * in this form rather than anything in their code. One pointed `npm install` at a directory with
+ * no package.json; the other pasted its README instructions into the command box, so the probe
+ * ran `sh -c "Frontend: cd apps/web && ..."` and got "Frontend:: not found". Both were a minute's
+ * work to fix and neither team had any way of knowing.
+ *
+ * These are warnings, never blocks. The checks are guesses about intent, a guess that stops a
+ * team submitting at four in the morning is worse than the mistake it prevents, and a team that
+ * means exactly what they typed must be able to proceed.
+ */
+export function submissionWarnings(draft: SubmissionDraft): string[] {
+  const warnings: string[] = []
+  if (draft.buildMethod !== 'COMMAND') return warnings
+
+  const command = draft.buildCommand?.trim() ?? ''
+  if (command === '') return warnings
+
+  // "Frontend:", "Backend:", "Start:" — a label, not a command. This is the exact shape that
+  // cost an entry its Runs score, and `sh` reports it as "not found" on the first word.
+  const first = command.split(/\s+/)[0] ?? ''
+  const labels = command.match(/(?:^|\s)[A-Z][A-Za-z ]{0,20}:(?=\s)/g) ?? []
+  if (first.endsWith(':') || labels.length >= 2 || /\n/.test(command)) {
+    warnings.push(
+      'This looks like instructions rather than one command. We run exactly what is in this box, '
+      + 'as a single shell command — anything like "Frontend:" or "Start:" will be read as a '
+      + 'program name and fail. Join the steps with && instead.')
+  }
+
+  // There was a second check here, for a bare `npm`/`pip` command, on the theory that the
+  // manifest might be in a subdirectory. It fired on `npm ci && npm run build && npm start`,
+  // which is correct and is what most teams type. A warning that shows for most entries teaches
+  // people to dismiss the panel, which would cost us the one check that is precise. Where the
+  // manifest lives cannot be known from this form, so it is stated as a hint on the field
+  // instead — always visible, never crying wolf.
+
+  return warnings
 }

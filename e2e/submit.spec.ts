@@ -109,6 +109,43 @@ test.describe('submitting', () => {
   })
 })
 
+test.describe('the form catches a mistake before the deadline does', () => {
+  /*
+   * Both of the first two real entries scored zero on the Runs dimension because of this form
+   * rather than their code. One pasted README instructions into the command box, so the probe
+   * ran `sh -c "Frontend: cd apps/web && ..."`. This walks that exact text.
+   */
+  test('WARNS about pasted instructions, and still lets the team submit', async ({ page }) => {
+    await page.goto('/submit')
+    await page.getByLabel('How your project builds').selectOption('COMMAND')
+    await page.getByLabel('Build and start command').fill(
+      'Frontend: cd apps/web && npm install Backend: Install: pip install -r requirements.txt')
+
+    const panel = page.getByTestId('submit-warnings')
+    await expect(panel).toBeVisible()
+    await expect(panel).toContainText('looks like instructions rather than one command')
+    // Headed in words, not signalled by colour alone (P5.4).
+    await expect(panel).toContainText('you can still submit')
+    // And it does not disable submission: it is a warning, not a gate.
+    await expect(page.getByRole('button', { name: 'Submit entry' })).toBeEnabled()
+  })
+
+  test('says nothing for an ordinary command', async ({ page }) => {
+    await page.goto('/submit')
+    await page.getByLabel('How your project builds').selectOption('COMMAND')
+    await page.getByLabel('Build and start command').fill('npm ci && npm run build && npm start')
+    await expect(page.getByTestId('submit-warnings')).toHaveCount(0)
+  })
+
+  test('REFUSES a Dockerfile path outside the repository', async ({ page }) => {
+    await page.goto('/submit')
+    await page.getByLabel('How your project builds').selectOption('DOCKERFILE')
+    await page.getByLabel('Dockerfile path').fill('../../etc/Dockerfile')
+    await page.getByRole('button', { name: 'Submit entry' }).click()
+    await expect(page.getByRole('alert')).toContainText('must be inside the repository')
+  })
+})
+
 test.describe('when intake is closed', () => {
   test('says so and disables submission rather than failing on send', async ({ page }) => {
     await closeIntake()

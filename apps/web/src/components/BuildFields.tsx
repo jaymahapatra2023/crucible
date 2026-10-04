@@ -30,7 +30,8 @@ export function BuildFields({
         </FormField>
       ) : (
         <FormField id="t-command" label="Build and start command" required
-          hint="Everything needed to install, build and start the application.">
+          hint="One shell command, run from the top of your repository — if your manifest is in a
+                subdirectory, begin with cd. Everything needed to install, build and start it.">
           <TextInput id="t-command" value={draft.buildCommand ?? ''}
             placeholder="npm ci && npm run build && npm start"
             onChange={(e) => onChange('buildCommand', e.target.value)} />
@@ -58,6 +59,26 @@ export function IntakeBanner({
       <strong>{state}</strong> — {message}
       {closesAt && open && <> Entries close {new Date(closesAt).toLocaleString()}.</>}
     </p>
+  )
+}
+
+/**
+ * Things that look wrong but are not enforced.
+ *
+ * Visually distinct from the blocking panel and never a colour alone (P5.4): it is headed
+ * "Worth checking" and the submit button stays enabled beside it.
+ */
+export function SubmissionWarnings({ warnings }: { warnings: string[] }) {
+  if (warnings.length === 0) return null
+  return (
+    <div role="status" data-testid="submit-warnings" style={{
+      border: '1px solid var(--warn)', borderRadius: 8, padding: 12, marginBottom: 12,
+    }}>
+      <strong style={{ color: 'var(--warn)' }}>Worth checking — you can still submit</strong>
+      <ul style={{ margin: '6px 0 0', paddingLeft: 18 }}>
+        {warnings.map((w) => <li key={w}>{w}</li>)}
+      </ul>
+    </div>
   )
 }
 

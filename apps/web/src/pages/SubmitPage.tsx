@@ -3,10 +3,13 @@ import { useAsyncData } from '../lib/useAsyncData.js'
 import { LoadingState } from '../components/LoadingState.js'
 import { ErrorState } from '../components/ErrorState.js'
 import { FormField, TextArea, TextInput } from '../components/FormField.js'
-import { BuildFields, IntakeBanner, SubmissionProblems } from '../components/BuildFields.js'
+import {
+  BuildFields, IntakeBanner, SubmissionProblems, SubmissionWarnings,
+} from '../components/BuildFields.js'
 import { TeamEntryStatus } from '../components/TeamEntryStatus.js'
 import {
-  getIntakeWindow, getOpenChallenges, resolveToken, rubricHref, submissionProblems, submitEntry,
+  getIntakeWindow, getOpenChallenges, resolveToken, rubricHref, submissionProblems,
+  submissionWarnings, submitEntry,
   type IntakeStatus, type OpenChallenge, type SubmissionDraft, type SubmissionReceipt,
   type TeamView,
 } from '../lib/submitApi.js'
@@ -65,6 +68,9 @@ export function SubmitPage() {
   const { window: intake, challenges } = state.data
   const open = intake.state === 'OPEN'
   const problems = submissionProblems(entry, token)
+  // Shown as soon as there is something to say, rather than waiting for a submit attempt: the
+  // point is to catch the mistake while the team is still looking at the field.
+  const warnings = submissionWarnings(entry)
   const chosen = challenges.find((c) => c.challengeId === draft.challengeId) ?? null
 
   if (receipt) return <Receipt receipt={receipt} onAnother={() => { setReceipt(null); setDraft(EMPTY); setContact(null) }} />
@@ -135,6 +141,7 @@ export function SubmitPage() {
               e.target.value.split('\n').map((s) => s.trim()).filter(Boolean))} />
         </FormField>
 
+        <SubmissionWarnings warnings={warnings} />
         <SubmissionProblems problems={touched ? problems : []} />
 
         {failure && <p role="alert" style={{ color: 'var(--danger)' }}>{failure}</p>}
